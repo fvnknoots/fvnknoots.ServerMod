@@ -1,0 +1,458 @@
+{
+    "Name": "fvnknoots.ServerMod",
+    "Description": "fvnkhead's server mod",
+    "Version": "1.0.0",
+    "LoadPriority": 2,
+    "RequiredOnClient": false,
+
+    "ConVars": [
+        // 1 = print debug messages
+        {
+            "Name": "fm_debug_enabled", 
+            "DefaultValue": "1"
+        },
+
+        // list of admin UIDs separated by commas ,
+        {
+            "Name": "fm_admin_uids",
+            "DefaultValue": "1234,5678"
+        },
+
+        // 1 = require admins to type !auth <password>
+        {
+            "Name": "fm_admin_auth_enabled",
+            "DefaultValue": "1"
+        },
+
+        // admin password for !auth
+        {
+            "Name": "fm_admin_password",
+            "DefaultValue": "1234"
+        },
+
+        // block admin chat messages until they've !authed successfully
+        // (to prevent impersonating by spoofs)
+        {
+            "Name": "fm_admin_auth_unauth_chat_block",
+            "DefaultValue": "1"
+        },
+
+        // 1 = notify players when an admin joins
+        {
+            "Name": "fm_admin_join_notification",
+            "DefaultValue": "1"
+        },
+
+        // 1 = show welcome message
+        {
+            "Name": "fm_welcome_enabled",
+            "DefaultValue": "1"
+        },
+
+        // welcome message
+        {
+            "Name": "fm_welcome",
+            "DefaultValue": "welcome! see !help for available commands"
+        },
+
+        // welcome notes
+        // can have multiple notes if separated by '|' letter, like
+        // "note 1|note 2|note 3"
+        {
+            "Name": "fm_welcome_notes",
+            "DefaultValue": "chat commands sometimes don't work when you're dead"
+        },
+
+        //--------------------------------------------------------------------------------
+        // user commands
+        //--------------------------------------------------------------------------------
+
+        // 1 = enable !rules
+        {
+            "Name": "fm_rules_enabled",
+            "DefaultValue": "1"
+        },
+
+        // allowed rules
+        {
+            "Name": "fm_rules_ok",
+            "DefaultValue": "light banter, teasing, funny macros"
+        },
+
+        // disallowed rules
+        {
+            "Name": "fm_rules_not_ok",
+            "DefaultValue": "malicious speech, degeneracy, cheating, competitive macros"
+        },
+
+        // 1 = add custom commands
+        {
+            "Name": "fm_custom_commands_enabled",
+            "DefaultValue": "1"
+        },
+
+        // list of custom commands that print a string to the player using it
+        // format: "!command1=message1|!command2=message2|!command3=message3|..."
+        {
+            "Name": "fm_custom_commands",
+            "DefaultValue": "!discord=my_discord_link|!website=my_website"
+        },
+
+        // 1 = !kick enabled
+        {
+            "Name": "fm_kick_enabled",
+            "DefaultValue": "1"
+        },
+        
+        // 1 = prevent kicked players from re-joining during the match
+        {
+            "Name": "fm_kick_save",
+            "DefaultValue": "1"
+        },
+
+        // 0.5 = 50% players required to !kick for it to happen
+        {
+            "Name": "fm_kick_percentage",
+            "DefaultValue": "0.5"
+        },
+
+        // minimum players required for !kick
+        {
+            "Name": "fm_kick_min_players",
+            "DefaultValue": "5"
+        },
+
+        // 1 = !maps enabled
+        {
+            "Name": "fm_maps_enabled",
+            "DefaultValue": "1"
+        },
+
+        // map pool for both auto-rotation and voting
+        {
+            "Name": "fm_maps",
+            "DefaultValue": "mp_glitch,mp_angel_city,mp_eden,mp_wargames,mp_drydock,mp_colony02,mp_black_water_canal,mp_thaw,mp_grave,mp_forwardbase_kodai,mp_complex3,mp_homestead,mp_relic02,mp_rise,mp_crashsite3"
+        },
+
+        // 0 = linear map rotation
+        // 1 = random map rotation
+        {
+            "Name": "fm_map_rotation",
+            "DefaultValue": "0" 
+        },
+
+        // 1 = !nextmap enabled
+        {
+            "Name": "fm_nextmap_enabled",
+            "DefaultValue": "1"
+        },
+
+        // maps not in normal rotation, only by !nextmap voting
+        {
+            "Name": "fm_nextmap_only_maps", 
+            "DefaultValue": "mp_lf_stacks,mp_lf_deck,mp_lf_township,mp_lf_uma,mp_lf_meadow,mp_lf_traffic"
+        },
+
+        // allow voting for nextmap-only maps only if player count is equal or less than this
+        // this prevents voting for small maps if you have lots of players
+        {
+            "Name": "fm_nextmap_only_maps_max_players",
+            "DefaultValue": "8"
+        },
+
+        // 1 = show a hint to use !nextmap during the match
+        {
+            "Name": "fm_nextmap_hint_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 0 = don't allow re-voting for the map being played
+        {
+            "Name": "fm_nextmap_repeat_enabled", 
+            "DefaultValue": "0"
+        },
+
+        // 1 = !switch enabled
+        {
+            "Name": "fm_switch_enabled",
+            "DefaultValue": "1"
+        },
+
+        // how many players less does the other team need to have in order to !switch there
+        {
+            "Name": "fm_switch_diff",
+            "DefaultValue": "1"
+        },
+
+        // how many times can a player use !switch
+        {
+            "Name": "fm_switch_limit",
+            "DefaultValue": "3"
+        },
+
+        // 1 = kills the player using !switch (to prevent abuse)
+        {
+            "Name": "fm_switch_kill",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !teambalance enabled
+        {
+            "Name": "fm_balance_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 35% players required for a !balance vote to pass
+        {
+            "Name": "fm_balance_percentage",
+            "DefaultValue": "0.35"
+        },
+
+        // minimum players in-game before !balance can be used
+        {
+            "Name": "fm_balance_min_players",
+            "DefaultValue": "3"
+        },
+
+        // 1 = balance teams at end of game
+        {
+            "Name": "fm_balance_postmatch",
+            "DefaultValue": "1"
+        },
+
+        // 1 = enable autobalance
+        {
+            "Name": "fm_autobalance_enabled",
+            "DefaultValue": "1"
+        },
+
+        // team size difference before autobalance kick in
+        // this should be higher than fm_switch_diff
+        // eg. with 2, autobalance will occur at 5v3, for example
+        {
+            "Name": "fm_autobalance_diff",
+            "DefaultValue": "3"
+        },
+
+        // 1 = !extend enabled
+        {
+            "Name": "fm_extend_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 50% players required for !extend to pass
+        {
+            "Name": "fm_extend_percentage",
+            "DefaultValue": "0.5"
+        },
+
+        // how many minutes to add to the game after !extend
+        {
+            "Name": "fm_extend_minutes",
+            "DefaultValue": "10"
+        },
+
+        // 1 = !skip enabled
+        {
+            "Name": "fm_skip_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 50% players required for !skip to pass
+        {
+            "Name": "fm_skip_percentage",
+            "DefaultValue": "0.5"
+        },
+
+        // 1 = !roll enabled
+        {
+            "Name": "fm_roll_enabled",
+            "DefaultValue": "1"
+        },
+
+        // max !roll commands per player
+        {
+            "Name": "fm_roll_limit",
+            "DefaultValue": "3"
+        },
+
+        //--------------------------------------------------------------------------------
+        // admin commands
+        //--------------------------------------------------------------------------------
+
+        // 1 = !mute enabled
+        {
+            "Name": "fm_mute_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = re-mute a muted player if they re-join during the match
+        {
+            "Name": "fm_mute_save",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !lockdown enabled (prevents new players from joining during the match)
+        {
+            "Name": "fm_lockdown_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !yell enabled (shows big text to everyone)
+        {
+            "Name": "fm_yell_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !slay enabled (kills a player)
+        {
+            "Name": "fm_slay_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !freeze enabled (stops a player from moving)
+        {
+            "Name": "fm_freeze_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !stim enabled (gives perma stim)
+        {
+            "Name": "fm_stim_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !salvo enabled (gives salvo core)
+        {
+            "Name": "fm_salvo_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !tank enabled (gives lots of HP)
+        {
+            "Name": "fm_tank_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !fly enabled (gives noclip)
+        {
+            "Name": "fm_fly_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !mrvn enabled (spawns marvins around the map)
+        {
+            "Name": "fm_mrvn_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !grunt enabled (spawns a grunt at player)
+        {
+            "Name": "fm_grunt_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 1 = !chaos enabled (spawns random NPCs)
+        {
+            "Name": "fm_chaos_enabled",
+            "DefaultValue": "1"
+        },
+
+
+        //--------------------------------------------------------------------------------
+        // player experience
+        //--------------------------------------------------------------------------------
+
+        // 1 = killstreaks enabled
+        {
+            "Name": "fm_killstreak_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 10 = show killstreak message at every 10 kills (10, 20, 30, ...)
+        {
+            "Name": "fm_killstreak_increment",
+            "DefaultValue": "10"
+        },
+
+        // announce when someone falls to death
+        {
+            "Name": "fm_joke_pitfalls_enabled",
+            "DefaultValue": "1"
+        },
+
+        // announce when someone kills a marvin
+        {
+            "Name": "fm_joke_marvin_enabled",
+            "DefaultValue": "1"
+        },
+
+        // announce when someone kills a drone
+        {
+            "Name": "fm_joke_drone_enabled",
+            "DefaultValue": "1"
+        },
+
+        // announce when someone kills with phase
+        {
+            "Name": "fm_joke_kills_enabled",
+            "DefaultValue": "1"
+        },
+
+        // replace ezfragz (cheating website) with rick roll URL
+        {
+            "Name": "fm_joke_ezfrags_enabled",
+            "DefaultValue": "1"
+        },
+
+        //--------------------------------------------------------------------------------
+        // misc
+        //--------------------------------------------------------------------------------
+
+        // 1 = anti-chat spam enabled (kicks the player if they go over)
+        {
+            "Name": "fm_antispam_enabled",
+            "DefaultValue": "1"
+        },
+
+        // 10 second period for checking spam
+        {
+            "Name": "fm_antispam_period",
+            "DefaultValue": "10"
+        },
+
+        // 10 messages max per period above
+        {
+            "Name": "fm_antispam_limit",
+            "DefaultValue": "10"
+        },
+
+        // 1 = allow player mentions in chat
+        // eg. @fv would result into @fvnkhead if I'm in-game
+        {
+            "Name": "fm_chat_mention_enabled",
+            "DefaultValue": "1"
+        }
+    ],
+
+    "Scripts": [
+        {
+            "Path": "fm.nut",
+            "RunOn": "SERVER",
+            "ServerCallback": {
+                "After": "fm_Init"
+            }
+        }
+    ],
+
+    "Dependencies": {
+        // kicks players by their IP network if included
+        "NETLIB": "fvnkhead.NetLib",
+
+        // adds weapon balance commands if included
+        "RETOUCHED": "fvnknoots.Retouched",
+
+        // adds !gym if included
+        "GYMMODE": "fvnknoots.GymMode"
+    }
+}
