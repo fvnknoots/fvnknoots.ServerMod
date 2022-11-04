@@ -736,6 +736,14 @@ void function fm_Init() {
     file.gymModeCommand.lines = GymMode_Changes()
 #endif
 
+#if PUREMODE
+    // pure mode integration
+    CustomCommand pureModeCommand
+    pureModeCommand.name = "!pure"
+    pureModeCommand.lines = PureMode_Changes()
+    file.customCommands.append(pureModeCommand)
+#endif
+
     // retouched integration
     file.retouchedCommands = []
 #if RETOUCHED

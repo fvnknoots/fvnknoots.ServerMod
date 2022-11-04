@@ -453,6 +453,9 @@
         "RETOUCHED": "fvnknoots.Retouched",
 
         // adds !gym if included
-        "GYMMODE": "fvnknoots.GymMode"
+        "GYMMODE": "fvnknoots.GymMode",
+
+        // adds !pure if included
+        "PUREMODE": "fvnknoots.PureMode"
     }
 }
