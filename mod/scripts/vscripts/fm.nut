@@ -186,7 +186,6 @@ struct {
 
     bool retouchedEnabled
     array<CustomCommand> retouchedCommands
-    CustomCommand gymModeCommand
 } file
 
 //------------------------------------------------------------------------------
@@ -733,12 +732,14 @@ void function fm_Init() {
 
     // gym mode integration
 #if GYMMODE
-    file.gymModeCommand.name = "!gym"
-    file.gymModeCommand.lines = GymMode_Changes()
+    CustomCommand gymModeCommand
+    gymModeCommand.name = "!gym"
+    gymModeCommand.lines = GymMode_Changes()
+    file.customCommands.append(gymModeCommand)
 #endif
 
-#if PUREMODE
     // pure mode integration
+#if PUREMODE
     CustomCommand pureModeCommand
     pureModeCommand.name = "!pure"
     pureModeCommand.lines = PureMode_Changes()
@@ -850,16 +851,6 @@ ClServer_MessageStruct function ChatCallback(ClServer_MessageStruct messageInfo)
             return messageInfo
         }
     }
-
-#if GYMMODE
-    if (command == "!gym") {
-        foreach (string line in file.gymModeCommand.lines) {
-            SendMessage(player, PrivateColor(line))
-        }
-
-        return messageInfo
-    }
-#endif
 
 #if RETOUCHED
     if (file.retouchedEnabled) {
@@ -1120,10 +1111,6 @@ bool function CommandHelp(entity player, array<string> args) {
     foreach (CustomCommand c in file.customCommands) {
         userCommands.append(c.name)
     }
-
-#if GYMMODE
-    userCommands.append(file.gymModeCommand.name)
-#endif
 
 #if RETOUCHED
     foreach (CustomCommand c in file.retouchedCommands) {
