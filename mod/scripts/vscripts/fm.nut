@@ -184,6 +184,7 @@ struct {
 
     bool chatMentionEnabled
 
+    bool retouchedEnabled
     array<CustomCommand> retouchedCommands
     CustomCommand gymModeCommand
 } file
@@ -745,15 +746,18 @@ void function fm_Init() {
 #endif
 
     // retouched integration
+    file.retouchedEnabled = GetConVarBool("fm_retouched_enabled")
     file.retouchedCommands = []
 #if RETOUCHED
-    foreach (array<string> changes in RETOUCHED_CHANGELIST) {
-        CustomCommand c
-        c.name = "!" + changes[0].tolower()
-        for (int i = 1; i < changes.len(); i++) {
-            c.lines.append(changes[i].tolower())
+    if (file.retouchedEnabled) {
+        foreach (array<string> changes in RETOUCHED_CHANGELIST) {
+            CustomCommand c
+                c.name = "!" + changes[0].tolower()
+                for (int i = 1; i < changes.len(); i++) {
+                    c.lines.append(changes[i].tolower())
+                }
+            file.retouchedCommands.append(c)
         }
-        file.retouchedCommands.append(c)
     }
 #endif
 
@@ -858,13 +862,14 @@ ClServer_MessageStruct function ChatCallback(ClServer_MessageStruct messageInfo)
 #endif
 
 #if RETOUCHED
-    foreach (CustomCommand c in file.retouchedCommands) {
-        if (c.name == command) {
-            foreach (string line in c.lines) {
-                SendMessage(player, PrivateColor(line))
+    if (file.retouchedEnabled) {
+        foreach (CustomCommand c in file.retouchedCommands) {
+            if (c.name == command) {
+                foreach (string line in c.lines) {
+                    SendMessage(player, PrivateColor(line))
+                }
+                return messageInfo
             }
-
-            return messageInfo
         }
     }
 #endif

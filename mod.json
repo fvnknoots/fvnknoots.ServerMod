@@ -432,6 +432,16 @@
         {
             "Name": "fm_chat_mention_enabled",
             "DefaultValue": "1"
+        },
+
+        //--------------------------------------------------------------------------------
+        // integrations
+        //--------------------------------------------------------------------------------
+
+        // 1 = adds retouched commands (!summary, !goals, !car, ...) if the mod is loaded
+        {
+            "Name": "fm_retouched_enabled",
+            "DefaultValue": "1"
         }
     ],
 
