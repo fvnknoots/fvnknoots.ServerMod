@@ -185,7 +185,8 @@ struct {
     bool chatMentionEnabled
 
     bool retouchedEnabled
-    array<CustomCommand> retouchedCommands
+    bool experimentalEnabled
+    array<CustomCommand> balanceCommands
 } file
 
 //------------------------------------------------------------------------------
@@ -748,16 +749,26 @@ void function fm_Init() {
 
     // retouched integration
     file.retouchedEnabled = GetConVarBool("fm_retouched_enabled")
-    file.retouchedCommands = []
-#if RETOUCHED
-    if (file.retouchedEnabled) {
-        foreach (array<string> changes in RETOUCHED_CHANGELIST) {
+    file.experimentalEnabled = GetConVarBool("fm_experimental_enabled")
+    file.balanceCommands = []
+#if RETOUCHED || EXPERIMENTAL
+    Log("#if RETOUCHED || EXPERIMENTAL")
+    if (file.retouchedEnabled || file.experimentalEnabled) {
+    #if RETOUCHED && !EXPERIMENTAL
+        Log("#if RETOUCHED && !EXPERIMENTAL")
+        array< array<string> > changelist = RETOUCHED_CHANGELIST
+    #elseif EXPERIMENTAL
+        Log("#elseif EXPERIMENTAL")
+        array< array<string> > changelist = EXPERIMENTAL_CHANGELIST
+    #endif
+        foreach (array<string> changes in changelist) {
+            Log(changes[0])
             CustomCommand c
-                c.name = "!" + changes[0].tolower()
-                for (int i = 1; i < changes.len(); i++) {
-                    c.lines.append(changes[i].tolower())
-                }
-            file.retouchedCommands.append(c)
+            c.name = "!" + changes[0].tolower()
+            for (int i = 1; i < changes.len(); i++) {
+                c.lines.append(changes[i].tolower())
+            }
+            file.balanceCommands.append(c)
         }
     }
 #endif
@@ -852,18 +863,14 @@ ClServer_MessageStruct function ChatCallback(ClServer_MessageStruct messageInfo)
         }
     }
 
-#if RETOUCHED
-    if (file.retouchedEnabled) {
-        foreach (CustomCommand c in file.retouchedCommands) {
-            if (c.name == command) {
-                foreach (string line in c.lines) {
-                    SendMessage(player, PrivateColor(line))
-                }
-                return messageInfo
+    foreach (CustomCommand c in file.balanceCommands) {
+        if (c.name == command) {
+            foreach (string line in c.lines) {
+                SendMessage(player, PrivateColor(line))
             }
+            return messageInfo
         }
     }
-#endif
 
     bool commandFound = false
     bool commandSuccess = false
@@ -1097,7 +1104,7 @@ void function Welcome_OnClientDisconnected(entity player) {
 //------------------------------------------------------------------------------
 bool function CommandHelp(entity player, array<string> args) {
     array<string> userCommands = []
-    array<string> retouchedCommands = []
+    array<string> balanceCommands = []
     array<string> adminCommands = []
     foreach (CommandInfo c in file.commands) {
         string names = Join(c.names, "/")
@@ -1112,18 +1119,16 @@ bool function CommandHelp(entity player, array<string> args) {
         userCommands.append(c.name)
     }
 
-#if RETOUCHED
-    foreach (CustomCommand c in file.retouchedCommands) {
-        retouchedCommands.append(c.name)
+    foreach (CustomCommand c in file.balanceCommands) {
+        balanceCommands.append(c.name)
     }
-#endif
 
     string userHelp = "available commands: " + Join(userCommands, ", ")
     SendMessage(player, PrivateColor(userHelp))
 
-    string retouchedHelp = "balance changes: " + Join(retouchedCommands, ", ")
-    if (retouchedCommands.len() > 0) {
-        SendMessage(player, PrivateColor(retouchedHelp))
+    string balanceHelp = "balance changes: " + Join(balanceCommands, ", ")
+    if (balanceCommands.len() > 0) {
+        SendMessage(player, PrivateColor(balanceHelp))
     }
 
     if (IsAdmin(player)) {

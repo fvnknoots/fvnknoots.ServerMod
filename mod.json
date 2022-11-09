@@ -442,6 +442,12 @@
         {
             "Name": "fm_retouched_enabled",
             "DefaultValue": "1"
+        },
+
+        // same as above but for the experimental balance mod
+        {
+            "Name": "fm_experimental_enabled",
+            "DefaultValue": "0"
         }
     ],
 
@@ -461,6 +467,7 @@
 
         // adds weapon balance commands if included
         "RETOUCHED": "fvnknoots.Retouched",
+        "EXPERIMENTAL": "fvnknoots.Experimental",
 
         // adds !gym if included
         "GYMMODE": "fvnknoots.GymMode",
