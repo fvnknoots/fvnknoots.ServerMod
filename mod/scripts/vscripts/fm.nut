@@ -126,6 +126,7 @@ struct {
 
     bool autobalanceEnabled
     int autobalanceDiff
+    bool autobalanceBlocked
     array<entity> autobalancePlayerQueue
 
     bool extendEnabled
@@ -287,6 +288,7 @@ void function fm_Init() {
     // autobalance
     file.autobalanceEnabled = GetConVarBool("fm_autobalance_enabled")
     file.autobalanceDiff = GetConVarInt("fm_autobalance_diff")
+    file.autobalanceBlocked = false
     file.autobalancePlayerQueue = []
 
     // extend
@@ -1665,6 +1667,10 @@ bool function CommandSwitch(entity player, array<string> args) {
         target.Die()
     }
 
+    if (isAdminSwitch) {
+        file.autobalanceBlocked = true
+    }
+
     SetTeam(target, otherTeam)
 
     AnnounceMessage(AnnounceColor(switchMsg))
@@ -1814,6 +1820,10 @@ void function Autobalance_Loop() {
 }
 
 void function Autobalance_Check() {
+    if (file.autobalanceBlocked) {
+        return
+    }
+
     int imcCount = GetPlayerArrayOfTeam(TEAM_IMC).len()
     int militiaCount = GetPlayerArrayOfTeam(TEAM_MILITIA).len()
 
@@ -1869,6 +1879,7 @@ void function DoAutobalance(int fromTeam) {
 }
 
 void function Autobalance_OnClientConnected(entity player) {
+    file.autobalanceBlocked = false
     if (file.autobalancePlayerQueue.contains(player)) {
         return
     }
@@ -1878,6 +1889,7 @@ void function Autobalance_OnClientConnected(entity player) {
 }
 
 void function Autobalance_OnClientDisconnected(entity player) {
+    file.autobalanceBlocked = false
     if (file.autobalancePlayerQueue.contains(player)) {
         file.autobalancePlayerQueue.remove(file.autobalancePlayerQueue.find(player))
     }

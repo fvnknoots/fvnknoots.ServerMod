@@ -231,7 +231,7 @@
         // eg. with 2, autobalance will occur at 5v3, for example
         {
             "Name": "fm_autobalance_diff",
-            "DefaultValue": "3"
+            "DefaultValue": "2"
         },
 
         // 1 = !extend enabled
