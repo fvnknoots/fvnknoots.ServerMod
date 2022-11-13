@@ -1723,7 +1723,7 @@ void function DoBalance() {
         SetTeam(player, newTeam)
     }
 
-    AnnounceMessage(AnnounceColor("teams have been balanced"))
+    AnnounceMessage(AnnounceColor("teams have been sort of balanced"))
 
     file.balanceVoters.clear()
 }
@@ -1765,15 +1765,16 @@ float function CalculateKillScore(entity player) {
     int kills = player.GetPlayerGameStat(PGS_KILLS)
     int assists = player.GetPlayerGameStat(PGS_ASSISTS)
     int deaths = player.GetPlayerGameStat(PGS_DEATHS)
-    if (deaths == 0) {
-        deaths = 1
-    }
 
-    float ka = float(kills) + float(assists)
-    float kad = ka / float(deaths)
+    // this is to artificially lower a newly joined player's K/D score
+    // since a player with 5 kills and 1 deaths would count as a top player
+    deaths = maxint(deaths, 5)
 
-    // number of kills + assists, multiplied by kills and assists per death
-    return ka * kad
+    float kd = float(kills) / float(deaths)
+    float ad = float(assists) / float(deaths)
+    float assistWeight = 0.5 // -50% importance for assists
+
+    return kd + (ad * assistWeight)
 }
 
 int function PlayerScoreSort(PlayerScore a, PlayerScore b) {
