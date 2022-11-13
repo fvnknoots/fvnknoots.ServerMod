@@ -1729,7 +1729,7 @@ void function DoBalance() {
         SetTeam(player, newTeam)
     }
 
-    AnnounceMessage(AnnounceColor("teams have been sort of balanced"))
+    AnnounceMessage(AnnounceColor("teams have been balanced (sort of)"))
 
     file.balanceVoters.clear()
 }
@@ -1875,7 +1875,9 @@ void function DoAutobalance(int fromTeam) {
     int toTeam = GetOtherTeam(fromTeam) 
     SetTeam(playerToSwitch, toTeam)
 
-    SendMessage(playerToSwitch, PrivateColor("you got autobalanced"))
+    string msg = "you've been moved to the smaller team"
+    PrivateHUD(playerToSwitch, msg)
+    SendMessage(playerToSwitch, PrivateColor(msg))
 }
 
 void function Autobalance_OnClientConnected(entity player) {
@@ -2110,7 +2112,7 @@ void function Lockdown_OnPlayerConnected(entity player) {
 //------------------------------------------------------------------------------
 bool function CommandYell(entity player, array<string> args) {
     string msg = Join(args, " ").toupper()
-    AnnounceHUD(msg, 255, 0, 0)
+    AnnounceHUD(msg, 199, 71, 8)
     return true
 }
 
@@ -2791,6 +2793,10 @@ void function AnnounceHUD(string msg, int r, int g, int b, int time = 10) {
     foreach (entity player in GetPlayerArray()) {
         SendHUD(player, msg, r, g, b, time)
     }
+}
+
+void function PrivateHUD(entity player, string msg, int time = 5) {
+    SendHUD(player, msg, 52, 234, 255, time)
 }
 
 array<entity> function FindPlayersBySubstring(string substring) {
