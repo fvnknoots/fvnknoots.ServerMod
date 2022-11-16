@@ -249,6 +249,13 @@ void function fm_Init() {
             continue
         }
 
+#if MIRRORCITY
+#else
+        if (map == "mp_mirror_city") {
+            continue
+        }
+#endif
+
         file.maps.append(map)
     }
     file.nextMapEnabled = GetConVarBool("fm_nextmap_enabled")
@@ -1361,7 +1368,8 @@ table<string, string> MAP_NAME_TABLE = {
     mp_relic02 = "Relic",
     mp_rise = "Rise",
     mp_thaw = "Exoplanet",
-    mp_wargames = "Wargames"
+    mp_wargames = "Wargames",
+    mp_mirror_city = "Mirror City"
 }
 
 string function MapName(string map) {
@@ -1396,7 +1404,7 @@ array<string> function AllMaps() {
 bool function CommandMaps(entity player, array<string> args) {
     string mapsInRotation = MapsString(file.maps)
     SendMessage(player, PrivateColor("maps in rotation: " + mapsInRotation))
-    if (file.nextMapOnlyMaps.len() > 0) {
+    if (file.nextMapEnabled && file.nextMapOnlyMaps.len() > 0) {
         string voteOnlyMaps = MapsString(file.nextMapOnlyMaps)
         string msg = format("maps by vote only (with %d players or less): %s", file.nextMapOnlyMapsMaxPlayers, voteOnlyMaps)
         SendMessage(player, PrivateColor(msg))

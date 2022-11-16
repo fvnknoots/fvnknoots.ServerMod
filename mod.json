@@ -473,6 +473,9 @@
         "GYMMODE": "fvnknoots.GymMode",
 
         // adds !pure if included
-        "PUREMODE": "fvnknoots.PureMode"
+        "PUREMODE": "fvnknoots.PureMode",
+
+        // mirror city map vote
+        "MIRRORCITY": "cat_or_not.mp_mirror_city"
     }
 }
