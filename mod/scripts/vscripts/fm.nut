@@ -164,8 +164,8 @@ struct {
     bool flyEnabled
     bool mrvnEnabled
     bool gruntEnabled
-
     bool chaosEnabled
+    bool ruiEnabled
 
     bool jokePitfallsEnabled
     table<string, int> pitfallTable
@@ -332,6 +332,7 @@ void function fm_Init() {
     file.mrvnEnabled = GetConVarBool("fm_mrvn_enabled")
     file.gruntEnabled = GetConVarBool("fm_grunt_enabled")
     file.chaosEnabled = GetConVarBool("fm_chaos_enabled")
+    file.ruiEnabled = GetConVarBool("fm_rui_enabled")
 
     // player experience
     file.killstreakEnabled = GetConVarBool("fm_killstreak_enabled")
@@ -565,6 +566,14 @@ void function fm_Init() {
         C_ADMIN
     )
 
+    CommandInfo cmdRui = NewCommandInfo(
+        ["!rui"],
+        CommandRui,
+        1, NOMAX,
+        "!rui <poll | large | info | popup | announce | status> => serverside RUI test", "",
+        C_ADMIN
+    )
+
     // add commands and callbacks based on convars
     if (file.adminAuthEnabled) {
         file.commands.append(cmdAuth)
@@ -693,6 +702,10 @@ void function fm_Init() {
 
     if (file.chaosEnabled) {
         file.commands.append(cmdChaos)
+    }
+
+    if (file.ruiEnabled) {
+        file.commands.append(cmdRui)
     }
 
     if (file.rollEnabled) {
@@ -2392,6 +2405,74 @@ void function SpawnRandomNPC(int team, vector origin, vector angles) {
     }
 
     DispatchSpawn(npc)
+}
+
+//------------------------------------------------------------------------------
+// rui
+//------------------------------------------------------------------------------
+bool function CommandRui(entity player, array<string> args) {
+    string kind = args[0]
+    args.remove(0)
+
+    string line = args.len() >= 1 ? Join(args, " ") : "main part"
+    array<string> parts = split(line, ":")
+    string main = parts.len() >= 1 ? parts[0] : "main part:"
+    string sub = parts.len() >= 2 ? parts[1] : "sub parts"
+
+    switch (kind) {
+        case "poll":
+            array<string> items = split(sub, ",")
+            foreach (entity target in GetPlayerArray()) {
+                NSCreatePollOnPlayer(target, main, items, 10)
+            }
+            break
+
+        case "large":
+            foreach (entity target in GetPlayerArray()) {
+                NSSendLargeMessageToPlayer(target, main, sub, 10, "ui/fd_tutorial_tip.rpak")
+            }
+            break
+
+        case "info":
+            foreach (entity target in GetPlayerArray()) {
+                NSSendInfoMessageToPlayer(target, line)
+            }
+            break
+
+        case "popup":
+            foreach (entity target in GetPlayerArray()) {
+                NSSendPopUpMessageToPlayer(target, line)
+            }
+            break
+
+        case "announce":
+            foreach (entity target in GetPlayerArray()) {
+                NSSendAnnouncementMessageToPlayer(
+                    target, main, sub, <1,1,0>, 1, 0
+                )
+            }
+            break
+
+        case "status":
+            string id = UniqueString()
+            foreach (entity target in GetPlayerArray()) {
+                NSCreateStatusMessageOnPlayer(target, main, sub, id)
+                thread Rui_DeleteStatusMessageOnPlayer_Threaded(target, id)
+            }
+            break
+            
+
+        default:
+            SendMessage(player, ErrorColor("invalid subcommand: " + kind))
+            return false
+    }
+
+    return true
+}
+
+void function Rui_DeleteStatusMessageOnPlayer_Threaded(entity player, string id) {
+    wait 10
+    NSDeleteStatusMessageOnPlayer(player, id)
 }
 
 //------------------------------------------------------------------------------

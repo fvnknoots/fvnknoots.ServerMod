@@ -355,6 +355,12 @@
         // 1 = !chaos enabled (spawns random NPCs)
         {
             "Name": "fm_chaos_enabled",
+            "DefaultValue": "0"
+        },
+
+        // RUI test
+        {
+            "Name": "fm_rui_enabled",
             "DefaultValue": "1"
         },
 
