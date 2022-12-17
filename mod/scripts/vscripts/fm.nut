@@ -1897,7 +1897,7 @@ void function DoAutobalance(int fromTeam) {
     SetTeam(playerToSwitch, toTeam)
 
     string msg = "you've been moved to the smaller team"
-    PrivateHUD(playerToSwitch, msg)
+    SendInfoMessage(playerToSwitch, msg)
     SendMessage(playerToSwitch, PrivateColor(msg))
 }
 
@@ -2884,8 +2884,8 @@ void function AnnounceHUD(string msg, int r, int g, int b, int time = 10) {
     }
 }
 
-void function PrivateHUD(entity player, string msg, int time = 5) {
-    SendHUD(player, msg, 52, 234, 255, time)
+void function SendInfoMessage(entity player, string msg) {
+    NSSendInfoMessageToPlayer(player, msg)
 }
 
 array<entity> function FindPlayersBySubstring(string substring) {
