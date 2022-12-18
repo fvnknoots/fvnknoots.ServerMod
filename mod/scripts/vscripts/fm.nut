@@ -1732,7 +1732,7 @@ bool function CommandBalance(entity player, array<string> args) {
     return true
 }
 
-void function DoBalance() {
+void function DoBalance(bool isManual = true) {
     array<entity> players = GetPlayerArray()
 
     array<entity> switchablePlayers = []
@@ -1750,9 +1750,34 @@ void function DoBalance() {
         SetTeam(player, newTeam)
     }
 
-    AnnounceMessage(AnnounceColor("teams have been balanced (sort of)"))
+    // PvP only, and if manual trigger
+    if (isManual && IsPvP()) {
+        RecalculatePvPTeamScores()
+    }
+
+    string msg = "teams have been rebalanced"
+    AnnounceMessage(AnnounceColor(msg))
+    if (isManual) {
+        AnnounceInfoMessage(msg)
+    }
 
     file.balanceVoters.clear()
+}
+
+void function RecalculatePvPTeamScores() {
+    int imcKills = 0
+    int militiaKills = 0
+
+    foreach (entity player in GetPlayerArrayOfTeam(TEAM_IMC)) {
+        imcKills += player.GetPlayerGameStat(PGS_KILLS)
+    }
+
+    foreach (entity player in GetPlayerArrayOfTeam(TEAM_MILITIA)) {
+        militiaKills += player.GetPlayerGameStat(PGS_KILLS)
+    }
+
+    GameRules_SetTeamScore(TEAM_IMC, imcKills)
+    GameRules_SetTeamScore(TEAM_MILITIA, militiaKills)
 }
 
 array<PlayerScore> function GetPlayerScores(array<entity> players) {
@@ -1813,7 +1838,7 @@ int function PlayerScoreSort(PlayerScore a, PlayerScore b) {
 }
 
 void function Balance_Postmatch() {
-    DoBalance()
+    DoBalance(false)
 }
 
 void function Balance_OnClientDisconnected(entity player) {
@@ -2888,6 +2913,12 @@ void function SendInfoMessage(entity player, string msg) {
     NSSendInfoMessageToPlayer(player, msg)
 }
 
+void function AnnounceInfoMessage(string msg) {
+    foreach (entity player in GetPlayerArray()) {
+        SendInfoMessage(player, msg)
+    }
+}
+
 array<entity> function FindPlayersBySubstring(string substring) {
     substring = substring.tolower()
     array<entity> players = []
@@ -2920,6 +2951,10 @@ bool function CanSwitchTeams(entity player) {
     }
 
     return true
+}
+
+bool function IsPvP() {
+    return GameRules_GetGameMode() == "ps"
 }
 
 bool function IsCTF() {
