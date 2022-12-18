@@ -202,16 +202,42 @@
             "DefaultValue": "1"
         },
 
-        // 35% players required for a !balance vote to pass
+        // 35% players required for a !teambalance vote to pass
         {
             "Name": "fm_balance_percentage",
             "DefaultValue": "0.35"
         },
 
-        // minimum players in-game before !balance can be used
+        // minimum players in-game before !teambalance can be used
         {
             "Name": "fm_balance_min_players",
             "DefaultValue": "3"
+        },
+
+        // 1 = auto !teambalance enabled (PvP only)
+        // runs only if player count is equal or greater than fm_balance_min_players
+        {
+            "Name": "fm_pvp_rebalance_enabled",
+            "DefaultValue": "1"
+        },
+        // sum of both teams' scores in PvP before auto !teambalance can run
+        {
+            "Name": "fm_pvp_rebalance_min_score_sum",
+            "DefaultValue": "100"
+        },
+        // weaker team's score percentage (compared to sum) before auto !teambalance can run
+        // eg. if weaker team has 30 kills and stronger one has 70 kills,
+        // then 30% < 35% => !teambalance kicks in
+        {
+            "Name": "fm_pvp_rebalance_score_percentage",
+            "DefaultValue": "0.35"
+        },
+        // duration (in minutes) before another auto !teambalance can run
+        // this avoids a balance loop if it's not possible to maintain equal scores
+        // (eg. if one veteran has 90% of all the kills)
+        {
+            "Name": "fm_pvp_rebalance_pause_minutes",
+            "DefaultValue": "10"
         },
 
         // 1 = balance teams at end of game

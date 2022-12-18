@@ -124,6 +124,12 @@ struct {
     array<entity> balanceVoters
     bool balancePostmatch
 
+    bool pvpRebalanceEnabled
+    int pvpRebalanceMinScoreSum
+    float pvpRebalanceScorePercentage
+    int pvpRebalancePauseSeconds
+    float pvpRebalancedAt
+
     bool autobalanceEnabled
     int autobalanceDiff
     bool autobalanceBlocked
@@ -291,6 +297,13 @@ void function fm_Init() {
     file.balanceThreshold = 0
     file.balanceVoters = []
     file.balancePostmatch = GetConVarBool("fm_balance_postmatch")
+
+    // pvp rebalance
+    file.pvpRebalanceEnabled = GetConVarBool("fm_pvp_rebalance_enabled")
+    file.pvpRebalanceMinScoreSum = GetConVarInt("fm_pvp_rebalance_min_score_sum")
+    file.pvpRebalanceScorePercentage = GetConVarFloat("fm_pvp_rebalance_score_percentage")
+    file.pvpRebalancePauseSeconds = GetConVarInt("fm_pvp_rebalance_pause_minutes") * 60
+    file.pvpRebalancedAt = -1
 
     // autobalance
     file.autobalanceEnabled = GetConVarBool("fm_autobalance_enabled")
@@ -631,6 +644,10 @@ void function fm_Init() {
 
     if (file.balancePostmatch && !IsFFAGame()) {
         AddCallback_GameStateEnter(eGameState.Postmatch, Balance_Postmatch)
+    }
+
+    if (file.pvpRebalanceEnabled && IsPvP()) {
+        AddCallback_GameStateEnter(eGameState.Playing, PvpRebalance_Start)
     }
 
     if (file.autobalanceEnabled && !IsFFAGame()) {
@@ -1732,7 +1749,7 @@ bool function CommandBalance(entity player, array<string> args) {
     return true
 }
 
-void function DoBalance(bool isManual = true) {
+void function DoBalance() {
     array<entity> players = GetPlayerArray()
 
     array<entity> switchablePlayers = []
@@ -1750,14 +1767,13 @@ void function DoBalance(bool isManual = true) {
         SetTeam(player, newTeam)
     }
 
-    // PvP only, and if manual trigger
-    if (isManual && IsPvP()) {
+    if (IsPvP() && GetGameState() < eGameState.Postmatch) {
         RecalculatePvPTeamScores()
     }
 
     string msg = "teams have been rebalanced"
     AnnounceMessage(AnnounceColor(msg))
-    if (isManual) {
+    if (GetGameState() < eGameState.Postmatch) {
         AnnounceInfoMessage(msg)
     }
 
@@ -1838,7 +1854,7 @@ int function PlayerScoreSort(PlayerScore a, PlayerScore b) {
 }
 
 void function Balance_Postmatch() {
-    DoBalance(false)
+    DoBalance()
 }
 
 void function Balance_OnClientDisconnected(entity player) {
@@ -1847,6 +1863,55 @@ void function Balance_OnClientDisconnected(entity player) {
     }
 }
 
+//------------------------------------------------------------------------------
+// pvp rebalance
+//------------------------------------------------------------------------------
+float PVP_REBALANCE_INTERVAL = 10
+
+void function PvpRebalance_Start() {
+    Log("starting PvP rebalance loop")
+    thread PvpRebalance_Loop()
+}
+
+void function PvpRebalance_Loop() {
+    while (true) {
+        wait PVP_REBALANCE_INTERVAL
+        PvpRebalance_Check()
+    }
+}
+
+void function PvpRebalance_Check() {
+    if (file.autobalanceBlocked) {
+        return
+    }
+
+    if (GetPlayerArray().len() < file.balanceMinPlayers) {
+        return
+    }
+
+    if (file.pvpRebalancedAt != -1) {
+        float secondsSinceLastRebalance = Time() - file.pvpRebalancedAt
+        if (secondsSinceLastRebalance < file.pvpRebalancePauseSeconds) {
+            return
+        }
+    }
+
+    int imcScore = GameRules_GetTeamScore(TEAM_IMC)
+    int militiaScore = GameRules_GetTeamScore(TEAM_MILITIA)
+    int scoreSum = imcScore + militiaScore
+    if (scoreSum < file.pvpRebalanceMinScoreSum) {
+        return
+    }
+
+    int minScore = minint(imcScore, militiaScore)
+    float scorePercentage = float(minScore) / float(scoreSum)
+    if (scorePercentage > file.pvpRebalanceScorePercentage) {
+        return
+    }
+
+    DoBalance()
+    file.pvpRebalancedAt = Time()
+}
 
 //------------------------------------------------------------------------------
 // autobalance
