@@ -24,6 +24,7 @@ struct CommandInfo {
     int minArgs,
     int maxArgs
     string usage,
+    string example,
     string adminUsage,
     int flags
 }
@@ -145,6 +146,9 @@ struct {
     float skipPercentage
     int skipThreshold
     array<entity> skipVoters
+
+    bool hpEnabled
+    table<entity, int> hpPlayers
 
     bool rollEnabled
     int rollLimit
@@ -323,6 +327,10 @@ void function fm_Init() {
     file.skipPercentage = GetConVarFloat("fm_skip_percentage")
     file.skipVoters = []
 
+    // hp
+    file.hpEnabled = GetConVarBool("fm_hp_enabled")
+    file.hpPlayers = {}
+
     // roll
     file.rollEnabled = GetConVarBool("fm_roll_enabled")
     file.rollLimit = GetConVarInt("fm_roll_limit")
@@ -374,14 +382,18 @@ void function fm_Init() {
         ["!help"],
         CommandHelp,
         0, 0,
-        "!help => get help", ""
+        "!help => get help",
+        "",
+        ""
     )
 
     CommandInfo cmdRules = NewCommandInfo(
         ["!rules"],
         CommandRules,
         0, 0,
-        "!rules => show rules", ""
+        "!rules => show rules",
+        "",
+        ""
     )
 
     CommandInfo cmdKick = NewCommandInfo(
@@ -389,6 +401,7 @@ void function fm_Init() {
         CommandKick,
         1, 1,
         "!kick <full or partial player name> => vote to kick a player",
+        "'!kick progamer' (votes to kick the player whose name has 'progamer' in it)",
         "!kick <full or partial player name> (force) => vote to kick a player (or force)",
         C_FORCE
     )
@@ -397,14 +410,18 @@ void function fm_Init() {
         ["!maps"],
         CommandMaps,
         0, 0,
-        "!maps => list available maps", ""
+        "!maps => list available maps",
+        "",
+        ""
     )
 
     CommandInfo cmdNextMap = NewCommandInfo(
         ["!nextmap", "!nm"],
         CommandNextMap,
         1, 3,
-        "!nextmap/!nm <full or partial map name> => vote for next map", ""
+        "!nextmap/!nm <full or partial map name> => vote for next map",
+        "'!nm gl' (votes for glitch)",
+        ""
     )
 
     CommandInfo cmdSwitch = NewCommandInfo(
@@ -412,6 +429,7 @@ void function fm_Init() {
         CommandSwitch,
         0, 0,
         "!switch/!sw => join opposite team",
+        "",
         "!switch/!sw (player) => join opposite team (or switch another player)",
         C_ADMINARG
     )
@@ -421,6 +439,7 @@ void function fm_Init() {
         CommandBalance,
         0, 0,
         "!teambalance/!tb => vote for team balance",
+        "",
         "!teambalance/!tb (force) => vote for team balance (or force)",
         C_FORCE
     )
@@ -430,6 +449,7 @@ void function fm_Init() {
         CommandExtend,
         0, 0,
         "!extend/!ex => vote to extend map time",
+        "",
         "!extend/!ex (force) => vote to extend map time (or force)",
         C_FORCE
     )
@@ -439,15 +459,27 @@ void function fm_Init() {
         CommandSkip,
         0, 0,
         "!skip => vote to skip current map",
+        "",
         "!skip (force) => vote to skip current map (or force)",
         C_FORCE
+    )
+
+    CommandInfo cmdHp = NewCommandInfo(
+        ["!hp"],
+        CommandHp,
+        1, 1,
+        "!hp <1-100> => change your maximum health",
+        "'!hp 10' (play with 10 hp)",
+        ""
     )
 
     CommandInfo cmdRoll = NewCommandInfo(
         ["!roll"],  
         CommandRoll,
         0, 0,
-        "!roll => roll a number between 0 and 100", ""
+        "!roll => roll a number between 0 and 100",
+        "",
+        ""
     )
 
     // admin commands
@@ -455,7 +487,9 @@ void function fm_Init() {
         ["!auth"],
         CommandAuth,
         1, 1,
-        "!auth <password> => authenticate yourself as an admin", "",
+        "!auth <password> => authenticate yourself as an admin",
+        "",
+        "",
         C_ADMIN | C_SILENT
     )
 
@@ -463,7 +497,9 @@ void function fm_Init() {
         ["!mute"],
         CommandMute,
         1, 1,
-        "!mute <full or partial player name> => mute a player", "",
+        "!mute <full or partial player name> => mute a player",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -471,7 +507,9 @@ void function fm_Init() {
         ["!unmute"],
         CommandUnmute,
         1, 1,
-        "!unmute <full or partial player name> => unmute a player", "",
+        "!unmute <full or partial player name> => unmute a player",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -479,7 +517,9 @@ void function fm_Init() {
         ["!lockdown"],
         CommandLockdown,
         0, 0,
-        "!lockdown => prevent new players from joining", "",
+        "!lockdown => prevent new players from joining",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -487,7 +527,9 @@ void function fm_Init() {
         ["!unlockdown"],
         CommandUnlockdown,
         0, 0,
-        "!unlockdown => allow new players to join", "",
+        "!unlockdown => allow new players to join",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -495,7 +537,9 @@ void function fm_Init() {
         ["!yell"],  
         CommandYell,
         1, NOMAX,
-        "!yell ... => yell something", "",
+        "!yell ... => yell something",
+        "",
+        "",
         C_ADMIN | C_SILENT
     )
 
@@ -503,7 +547,9 @@ void function fm_Init() {
         ["!slay"],
         CommandSlay,
         1, 1,
-        "!slay <player | all | us | them> => slay players", "",
+        "!slay <player | all | us | them> => slay players",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -511,7 +557,9 @@ void function fm_Init() {
         ["!freeze"],
         CommandFreeze,
         1, 1,
-        "!freeze <player | all | us | them> => freeze players", "",
+        "!freeze <player | all | us | them> => freeze players",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -519,7 +567,9 @@ void function fm_Init() {
         ["!stim"],
         CommandStim,
         1, 1,
-        "!stim <player | all | us | them> => give stim", "",
+        "!stim <player | all | us | them> => give stim",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -527,7 +577,9 @@ void function fm_Init() {
         ["!salvo"],
         CommandSalvo,
         1, 1,
-        "!salvo <player | all | us | them> => give flight core", "",
+        "!salvo <player | all | us | them> => give flight core",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -535,7 +587,9 @@ void function fm_Init() {
         ["!tank"],
         CommandTank,
         1, 1,
-        "!tank <player | all | us | them> => make tanky", "",
+        "!tank <player | all | us | them> => make tanky",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -543,7 +597,9 @@ void function fm_Init() {
         ["!fly"],
         CommandFly,
         1, 1,
-        "!fly <player | all | us | them> => make floaty", "",
+        "!fly <player | all | us | them> => make floaty",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -551,7 +607,9 @@ void function fm_Init() {
         ["!unfly"],
         CommandUnfly,
         1, 1,
-        "!unfly <player | all | us | them> => make not floaty", "",
+        "!unfly <player | all | us | them> => make not floaty",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -559,7 +617,9 @@ void function fm_Init() {
         ["!mrvn"],
         CommandMrvn,
         0, 0,
-        "!mrvn => spawn a marvin", "",
+        "!mrvn => spawn a marvin",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -567,7 +627,9 @@ void function fm_Init() {
         ["!grunt"],
         CommandGrunt,
         0, 1,
-        "!grunt [player name] => spawn a grunt", "",
+        "!grunt [player name] => spawn a grunt",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -575,7 +637,9 @@ void function fm_Init() {
         ["!chaos"],
         CommandChaos,
         0, 0,
-        "!chaos => chaos", "",
+        "!chaos => chaos",
+        "",
+        "",
         C_ADMIN
     )
 
@@ -583,7 +647,9 @@ void function fm_Init() {
         ["!rui"],
         CommandRui,
         1, NOMAX,
-        "!rui <poll | large | info | popup | announce | status> => serverside RUI test", "",
+        "!rui <poll | large | info | popup | announce | status> => serverside RUI test",
+        "'!rui announce softball: is best'",
+        "",
         C_ADMIN
     )
 
@@ -664,6 +730,12 @@ void function fm_Init() {
     if (file.skipEnabled && totalMaps > 1) {
         file.commands.append(cmdSkip)
         AddCallback_OnClientDisconnected(Skip_OnClientDisconnected)
+    }
+
+    if (file.hpEnabled) {
+        file.commands.append(cmdHp)
+        AddCallback_OnPlayerRespawned(Hp_OnPlayerRespawned)
+        AddCallback_OnClientDisconnected(Hp_OnPlayerDisconnected)
     }
 
     if (file.muteEnabled) {
@@ -835,7 +907,7 @@ CommandInfo function NewCommandInfo(
     array<string> names,
     bool functionref(entity, array<string>) fn,
     int minArgs, int maxArgs,
-    string usage, string adminUsage,
+    string usage, string example, string adminUsage,
     int flags = 0x0
 ) {
     CommandInfo commandInfo
@@ -844,6 +916,7 @@ CommandInfo function NewCommandInfo(
     commandInfo.minArgs = minArgs
     commandInfo.maxArgs = maxArgs
     commandInfo.usage = usage
+    commandInfo.example = example
     commandInfo.adminUsage = adminUsage
     commandInfo.flags = flags
     return commandInfo
@@ -972,6 +1045,11 @@ ClServer_MessageStruct function ChatCallback(ClServer_MessageStruct messageInfo)
             }
 
             SendMessage(player, ErrorColor("usage: " + usage))
+
+            if (c.example != "") {
+                SendMessage(player, PrivateColor("example: " + c.example))
+            }
+
             commandSuccess = false
             break
         }
@@ -1444,6 +1522,11 @@ bool function CommandMaps(entity player, array<string> args) {
 }
 
 bool function CommandNextMap(entity player, array<string> args) {
+    string uid = player.GetUID()
+    if (!file.nextMapHintedPlayers.contains(uid)) {
+        file.nextMapHintedPlayers.append(uid)
+    }
+
     string mapName = Join(args, " ")
     array<string> foundMaps = FindMapsBySubstring(mapName)
 
@@ -1483,6 +1566,7 @@ bool function CommandNextMap(entity player, array<string> args) {
 
     file.nextMapVoteTable[player] <- nextMap
     AnnounceMessage(AnnounceColor(player.GetPlayerName() + " wants to play on " + MapName(nextMap)))
+
     return true;
 }
 
@@ -1571,6 +1655,18 @@ string function NextMapCandidatesString() {
     return Join(chanceStrings, ", ")
 }
 
+// this is because RUI poll doesn't print the '%' letter
+array<string> function NextMapCandidatesPollOptions() {
+    array<NextMapScore> scores = NextMapCandidates()
+    array<string> chanceStrings = []
+    foreach (NextMapScore score in scores) {
+        string chanceString = format("%s (%d)", MapName(score.map), score.votes)
+        chanceStrings.append(chanceString)
+    }
+
+    return chanceStrings
+}
+
 array<NextMapScore> function NextMapCandidates() {
     table<string, int> mapVotes = {}
     foreach (entity player, string map in file.nextMapVoteTable) {
@@ -1602,9 +1698,12 @@ int function NextMapScoreSort(NextMapScore a, NextMapScore b) {
 }
 
 void function NextMap_OnWinnerDetermined() {
-    if (file.nextMapVoteTable.len() > 0) {
-        AnnounceMessage(AnnounceColor("next map chances: " + NextMapCandidatesString()))
+    if (file.nextMapVoteTable.len() == 0) {
+        return
     }
+
+    //AnnounceMessage(AnnounceColor("next map chances: " + NextMapCandidatesString()))
+    AnnouncePoll("next map votes (random draw):", NextMapCandidatesPollOptions(), 30)
 }
 
 void function NextMap_OnClientDisconnected(entity player) {
@@ -2126,6 +2225,62 @@ void function Skip_OnClientDisconnected(entity player) {
 }
 
 //------------------------------------------------------------------------------
+// hp
+//------------------------------------------------------------------------------
+bool function CommandHp(entity player, array<string> args) {
+    string hpString = args[0]
+    int hp
+    try {
+        hp = hpString.tointeger()
+    } catch (ex) {
+        SendMessage(player, ErrorColor("invalid number: " + hpString))
+        return false
+    }
+
+    if (hp > 100) {
+        SendMessage(player, ErrorColor("value too large, must be below or equal to 100"))
+        return false
+    }
+
+    if (hp < 1) {
+        SendMessage(player, ErrorColor("value too small, must be above or equal to 1"))
+        return false
+    }
+
+    if (hp == player.GetMaxHealth()) {
+        SendMessage(player, ErrorColor("you're already playing with " + hp + " hp"))
+        return false
+    }
+
+    player.SetMaxHealth(hp)
+    file.hpPlayers[player] <- hp
+
+    string msg = format("%s is playing with %d hp", player.GetPlayerName(), hp)
+    if (hp != 100) {
+        AnnounceMessage(AnnounceColor(msg))
+    } else {
+        SendMessage(player, PrivateColor("you're back on 100 hp"))
+    }
+
+    return true
+}
+
+void function Hp_OnPlayerRespawned(entity player) {
+    if (!(player in file.hpPlayers)) {
+        return
+    }
+
+    int hp = file.hpPlayers[player]
+    player.SetMaxHealth(hp)
+}
+
+void function Hp_OnPlayerDisconnected(entity player) {
+    if (player in file.hpPlayers) {
+        delete file.hpPlayers[player]
+    }
+}
+
+//------------------------------------------------------------------------------
 // mute
 //------------------------------------------------------------------------------
 bool function CommandMute(entity player, array<string> args) {
@@ -2595,6 +2750,7 @@ bool function CommandRoll(entity player, array<string> args) {
         msg += ", " + ErrorColor("nice")
     } else if (num == rollMax) {
         msg += ", what a " + ErrorColor("CHAD")
+        AnnounceBigMessage(name + " rolled " + rollMax, "what a CHAD")
     } else if (f < 0.5) {
         msg += ", meh"
     } else if (f < 0.9) {
@@ -2604,6 +2760,7 @@ bool function CommandRoll(entity player, array<string> args) {
     }
 
     AnnounceMessage(AnnounceColor(msg))
+
     return true
 }
 
@@ -2981,6 +3138,18 @@ void function SendInfoMessage(entity player, string msg) {
 void function AnnounceInfoMessage(string msg) {
     foreach (entity player in GetPlayerArray()) {
         SendInfoMessage(player, msg)
+    }
+}
+
+void function AnnounceBigMessage(string title, string description) {
+    foreach (entity player in GetPlayerArray()) {
+        NSSendAnnouncementMessageToPlayer(player, title, description, <1,1,0>, 1, 0)
+    }
+}
+
+void function AnnouncePoll(string header, array<string> options, float duration) {
+    foreach (entity player in GetPlayerArray()) {
+        NSCreatePollOnPlayer(player, header, options, duration)
     }
 }
 

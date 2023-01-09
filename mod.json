@@ -290,6 +290,12 @@
             "DefaultValue": "0.5"
         },
 
+        // 1 = !hp enabled
+        {
+            "Name": "fm_hp_enabled",
+            "DefaultValue": "1"
+        },
+
         // 1 = !roll enabled
         {
             "Name": "fm_roll_enabled",
