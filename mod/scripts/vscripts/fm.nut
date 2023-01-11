@@ -1702,8 +1702,8 @@ void function NextMap_OnWinnerDetermined() {
         return
     }
 
-    //AnnounceMessage(AnnounceColor("next map chances: " + NextMapCandidatesString()))
-    AnnouncePoll("next map votes (random draw):", NextMapCandidatesPollOptions(), 30)
+    AnnounceMessage(AnnounceColor("next map chances: " + NextMapCandidatesString()))
+    //AnnouncePoll("next map votes (random draw):", NextMapCandidatesPollOptions(), 30)
 }
 
 void function NextMap_OnClientDisconnected(entity player) {
