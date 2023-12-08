@@ -172,6 +172,18 @@
             "DefaultValue": "0"
         },
 
+        // 1 = !nextmode enabled (admin only)
+        {
+            "Name": "fm_nextmode_enabled",
+            "DefaultValue": "1"
+        },
+
+        // voteable game modes
+        {
+            "Name": "fm_modes",
+            "DefaultValue": "private_match","aitdm","at","coliseum","cp","ctf","fd_easy","fd_normal","fd_hard","fd_master","fd_insane","fw","lts","mfd","ps","tdm","ttdm","lf","alts","attdm","ffa","fra","holopilot_lf","rocket_lf","turbo_lts","turbo_ttdm","chamber","ctf_comp","fastball","gg","hidden","hs","inf","kr","sns","tffa","tt"
+        },
+
         // 1 = !switch enabled
         {
             "Name": "fm_switch_enabled",

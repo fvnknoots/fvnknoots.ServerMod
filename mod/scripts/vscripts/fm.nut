@@ -112,6 +112,9 @@ struct {
     array<string> nextMapHintedPlayers
     bool nextMapRepeatEnabled
 
+    bool nextModeEnabled
+    array<string> modes
+
     bool switchEnabled
     int switchDiff
     int switchLimit
@@ -287,6 +290,20 @@ void function fm_Init() {
         file.nextMapOnlyMaps.append(map)
     }
 
+    // nextmode
+    file.nextModeEnabled = GetConVarBool("fm_nextmode_enabled")
+    file.modes = []
+    modes = split(GetConVarString("fm_modes"), ",")
+    foreach (string dirtyMode in modes) {
+        string mode = strip(dirtyMode)
+        if (!IsValidMode(mode)) {
+            Log("ignoring invalid gamemode '" + mode + "'")
+            continue
+        }
+
+        file.modes.append(mode)
+    }
+
     // switch
     file.switchEnabled = GetConVarBool("fm_switch_enabled")
     file.switchDiff = GetConVarInt("fm_switch_diff")
@@ -419,9 +436,19 @@ void function fm_Init() {
         ["!nextmap", "!nm"],
         CommandNextMap,
         1, 3,
-        "!nextmap/!nm <full or partial map name> => vote for next map",
+        "!nextmap/!nm <full or partial map name> => vote for next map (see !maps for available maps)",
         "'!nm gl' (votes for glitch)",
         ""
+    )
+
+    CommandInfo cmdNextMode = NewCommandInfo(
+        ["!nextmode"],
+        CommandNextMode,
+        1, 9,
+        "",
+        "'!nextmode pvp' (sets pilots vs. pilots as next game mode)",
+        "!nextmode <full or partial mode name> => set next game mode (see !modes for available game modes)",
+        C_ADMIN
     )
 
     CommandInfo cmdSwitch = NewCommandInfo(
@@ -1731,6 +1758,74 @@ void function NextMapHint_OnPlayerRespawned(entity player) {
     }
 
     file.nextMapHintedPlayers.append(uid)
+}
+
+//------------------------------------------------------------------------------
+// modes
+//------------------------------------------------------------------------------
+table<string, string> MODE_NAME_TABLE = {
+    "private_match" = "Private Match",
+    "aitdm"         = "Attrition",
+    "at"            = "Bounty Hunt",
+    "coliseum"      = "Coliseum",
+    "cp"            = "Amped Hardpoint",
+    "ctf"           = "Capture the Flag",
+    "fd_easy"       = "Frontier Defense (Easy)",
+    "fd_normal"     = "Frontier Defense (Regular)",
+    "fd_hard"       = "Frontier Defense (Hard)",
+    "fd_master"     = "Frontier Defense (Master)",
+    "fd_insane"     = "Frontier Defense (Insane)",
+    "fw"            = "Frontier War",
+    "lts"           = "Last Titan Standing",
+    "mfd"           = "Marked For Death",
+    "ps"            = "Pilots vs. Pilots",
+    "solo"          = "Campaign",
+    "tdm"           = "Skirmish",
+    "ttdm"          = "Titan Brawl",
+    "lf"            = "Live Fire",
+    "alts"          = "Aegis Last Titan Standing",
+    "attdm"         = "Aegis Titan Brawl",
+    "ffa"           = "Free For All",
+    "fra"           = "Free Agents",
+    "holopilot_lf"  = "The Great Bamboozle",
+    "rocket_lf"     = "Rocket Arena",
+    "turbo_lts"     = "Turbo Last Titan Standing",
+    "turbo_ttdm"    = "Turbo Titan Brawl",
+    "chamber"       = "Chamber",
+    "ctf_comp"      = "Capture the Flag (Competitive)",
+    "fastball"      = "Fastball",
+    "gg"            = "Gun Game",
+    "hidden"        = "The Hidden",
+    "hs"            = "Hide and Seek",
+    "inf"           = "Infection",
+    "kr"            = "Amped Killrace",
+    "sns"           = "Sticks and Stones",
+    "tffa"          = "Titan Free For All",
+    "tt"            = "Titan Tag"
+}
+
+bool function CommandNextMode(entity player, array<string> args) {
+    string modeName = Join(args, " ")
+    array<string> foundModes = FindModesBySubstring(modeName)
+
+    if (foundModes.len() == 0) {
+        SendMessage(player, ErrorColor("mode '" + modeName + "' not found"))
+        return false
+    }
+
+    if (foundModes.len() > 1) {
+        SendMessage(player, ErrorColor("multiple matches for mode '" + modeName + "', be more specific"))
+        return false
+    }
+
+    string nextMode = foundModes[0]
+    if (!file.modes.contains(nextMode)) {
+        string mapsAvailable = MapsString(AllMaps())
+        SendMessage(player, ErrorColor(MapName(nextMap) + " is not in the map pool, available maps: " + mapsAvailable))
+        return false
+    }
+
+    return true
 }
 
 //------------------------------------------------------------------------------
