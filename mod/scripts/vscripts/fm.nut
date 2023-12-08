@@ -114,6 +114,7 @@ struct {
 
     bool nextModeEnabled
     array<string> modes
+    string nextMode
 
     bool switchEnabled
     int switchDiff
@@ -293,7 +294,8 @@ void function fm_Init() {
     // nextmode
     file.nextModeEnabled = GetConVarBool("fm_nextmode_enabled")
     file.modes = []
-    modes = split(GetConVarString("fm_modes"), ",")
+    file.nextMode = GameRules_GetGameMode()
+    array<string> modes = split(GetConVarString("fm_modes"), ",")
     foreach (string dirtyMode in modes) {
         string mode = strip(dirtyMode)
         if (!IsValidMode(mode)) {
@@ -441,16 +443,6 @@ void function fm_Init() {
         ""
     )
 
-    CommandInfo cmdNextMode = NewCommandInfo(
-        ["!nextmode"],
-        CommandNextMode,
-        1, 9,
-        "",
-        "'!nextmode pvp' (sets pilots vs. pilots as next game mode)",
-        "!nextmode <full or partial mode name> => set next game mode (see !modes for available game modes)",
-        C_ADMIN
-    )
-
     CommandInfo cmdSwitch = NewCommandInfo(
         ["!switch", "!sw"],
         CommandSwitch,
@@ -518,6 +510,16 @@ void function fm_Init() {
         "",
         "",
         C_ADMIN | C_SILENT
+    )
+
+    CommandInfo cmdNextMode = NewCommandInfo(
+        ["!nextmode"],
+        CommandNextMode,
+        1, 9,
+        "!nextmode <full or partial mode name> => set next game mode",
+        "",
+        "",
+        C_ADMIN
     )
 
     CommandInfo cmdMute = NewCommandInfo(
@@ -724,6 +726,10 @@ void function fm_Init() {
                 AddCallback_OnPlayerRespawned(NextMapHint_OnPlayerRespawned)
             }
         }
+    }
+
+    if (file.nextModeEnabled) {
+        file.commands.append(cmdNextMode)
     }
 
     if (file.switchEnabled && !IsFFAGame()) {
@@ -1612,7 +1618,7 @@ void function DoChangeMap(float waitTime) {
         }
     }
 
-    GameRules_ChangeMap(nextMap, GameRules_GetGameMode())
+    GameRules_ChangeMap(nextMap, file.nextMode)
 }
 
 string function GetUsualNextMap() {
@@ -1764,49 +1770,99 @@ void function NextMapHint_OnPlayerRespawned(entity player) {
 // modes
 //------------------------------------------------------------------------------
 table<string, string> MODE_NAME_TABLE = {
-    "private_match" = "Private Match",
-    "aitdm"         = "Attrition",
-    "at"            = "Bounty Hunt",
-    "coliseum"      = "Coliseum",
-    "cp"            = "Amped Hardpoint",
-    "ctf"           = "Capture the Flag",
-    "fd_easy"       = "Frontier Defense (Easy)",
-    "fd_normal"     = "Frontier Defense (Regular)",
-    "fd_hard"       = "Frontier Defense (Hard)",
-    "fd_master"     = "Frontier Defense (Master)",
-    "fd_insane"     = "Frontier Defense (Insane)",
-    "fw"            = "Frontier War",
-    "lts"           = "Last Titan Standing",
-    "mfd"           = "Marked For Death",
-    "ps"            = "Pilots vs. Pilots",
-    "solo"          = "Campaign",
-    "tdm"           = "Skirmish",
-    "ttdm"          = "Titan Brawl",
-    "lf"            = "Live Fire",
-    "alts"          = "Aegis Last Titan Standing",
-    "attdm"         = "Aegis Titan Brawl",
-    "ffa"           = "Free For All",
-    "fra"           = "Free Agents",
-    "holopilot_lf"  = "The Great Bamboozle",
-    "rocket_lf"     = "Rocket Arena",
-    "turbo_lts"     = "Turbo Last Titan Standing",
-    "turbo_ttdm"    = "Turbo Titan Brawl",
-    "chamber"       = "Chamber",
-    "ctf_comp"      = "Capture the Flag (Competitive)",
-    "fastball"      = "Fastball",
-    "gg"            = "Gun Game",
-    "hidden"        = "The Hidden",
-    "hs"            = "Hide and Seek",
-    "inf"           = "Infection",
-    "kr"            = "Amped Killrace",
-    "sns"           = "Sticks and Stones",
-    "tffa"          = "Titan Free For All",
-    "tt"            = "Titan Tag"
+    private_match = "Private Match",
+    aitdm         = "Attrition",
+    at            = "Bounty Hunt",
+    coliseum      = "Coliseum",
+    cp            = "Amped Hardpoint",
+    ctf           = "Capture the Flag",
+    fd_easy       = "Frontier Defense (Easy)",
+    fd_normal     = "Frontier Defense (Regular)",
+    fd_hard       = "Frontier Defense (Hard)",
+    fd_master     = "Frontier Defense (Master)",
+    fd_insane     = "Frontier Defense (Insane)",
+    fw            = "Frontier War",
+    lts           = "Last Titan Standing",
+    mfd           = "Marked For Death",
+    ps            = "Pilots vs. Pilots",
+    solo          = "Campaign",
+    tdm           = "Skirmish",
+    ttdm          = "Titan Brawl",
+    lf            = "Live Fire",
+    alts          = "Aegis Last Titan Standing",
+    attdm         = "Aegis Titan Brawl",
+    ffa           = "Free For All",
+    fra           = "Free Agents",
+    holopilot_lf  = "The Great Bamboozle",
+    rocket_lf     = "Rocket Arena",
+    turbo_lts     = "Turbo Last Titan Standing",
+    turbo_ttdm    = "Turbo Titan Brawl",
+    chamber       = "Chamber",
+    ctf_comp      = "Capture the Flag (Competitive)",
+    fastball      = "Fastball",
+    gg            = "Gun Game",
+    hidden        = "The Hidden",
+    hs            = "Hide and Seek",
+    inf           = "Infection",
+    kr            = "Amped Killrace",
+    sns           = "Sticks and Stones",
+    tffa          = "Titan Free For All",
+    tt            = "Titan Tag"
 }
+
+string function ModeName(string mode) {
+    return MODE_NAME_TABLE[mode].tolower()
+}
+
+bool function IsValidMode(string mode) {
+    return mode in MODE_NAME_TABLE
+}
+
+table<string, string> MODE_SEARCH_TABLE = {
+    private_match = "Private Match",
+    aitdm         = "Attrition",
+    at            = "Bounty Hunt",
+    coliseum      = "Coliseum",
+    cp            = "Amped Hardpoint",
+    ctf           = "ctf Capture the Flag (Vanilla)",
+    fd_easy       = "fd Frontier Defense (Easy)",
+    fd_normal     = "fd Frontier Defense (Regular)",
+    fd_hard       = "fd Frontier Defense (Hard)",
+    fd_master     = "fd Frontier Defense (Master)",
+    fd_insane     = "fd Frontier Defense (Insane)",
+    fw            = "fd Frontier War",
+    lts           = "lts Last Titan Standing",
+    mfd           = "mfd Marked For Death",
+    ps            = "pvp Pilots vs. Pilots",
+    solo          = "Campaign",
+    tdm           = "Skirmish",
+    ttdm          = "Titan Brawl",
+    lf            = "lf Live Fire",
+    alts          = "Aegis Last Titan Standing",
+    attdm         = "Aegis Titan Brawl",
+    ffa           = "ffa Free For All",
+    fra           = "Free Agents",
+    holopilot_lf  = "The Great Bamboozle",
+    rocket_lf     = "Rocket Arena",
+    turbo_lts     = "Turbo lts Last Titan Standing",
+    turbo_ttdm    = "Turbo Titan Brawl",
+    chamber       = "Chamber",
+    ctf_comp      = "Capture the Flag (Competitive)",
+    fastball      = "Fastball",
+    gg            = "gg Gun Game",
+    hidden        = "The Hidden",
+    hs            = "Hide and Seek",
+    inf           = "Infection",
+    kr            = "Amped Killrace",
+    sns           = "sns Sticks and Stones",
+    tffa          = "Titan Free For All",
+    tt            = "Titan Tag"
+}
+
 
 bool function CommandNextMode(entity player, array<string> args) {
     string modeName = Join(args, " ")
-    array<string> foundModes = FindModesBySubstring(modeName)
+    array<string> foundModes = FindModesByTokens(modeName)
 
     if (foundModes.len() == 0) {
         SendMessage(player, ErrorColor("mode '" + modeName + "' not found"))
@@ -1821,9 +1877,12 @@ bool function CommandNextMode(entity player, array<string> args) {
     string nextMode = foundModes[0]
     if (!file.modes.contains(nextMode)) {
         string mapsAvailable = MapsString(AllMaps())
-        SendMessage(player, ErrorColor(MapName(nextMap) + " is not in the map pool, available maps: " + mapsAvailable))
+        SendMessage(player, ErrorColor("mode '" + ModeName(nextMode) + "' is not available"))
         return false
     }
+
+    file.nextMode = nextMode
+    AnnounceMessage(AnnounceColor("next mode will be: " + ModeName(nextMode)))
 
     return true
 }
@@ -3271,6 +3330,25 @@ array<string> function FindMapsBySubstring(string substring) {
     }
 
     return maps
+}
+
+array<string> function FindModesByTokens(string tokens) {
+    array<string> substrings = split(tokens.tolower(), " ")
+    array<string> modes = []
+    foreach (string modeKey, string modeName in MODE_SEARCH_TABLE) {
+        bool allTokensMatch = true
+        foreach (string substring in substrings) {
+            if (modeName.tolower().find(substring) == null) {
+                allTokensMatch = false
+            }
+            
+        }
+        if (allTokensMatch) {
+            modes.append(modeKey)
+        }
+    }
+
+    return modes
 }
 
 bool function CanSwitchTeams(entity player) {
