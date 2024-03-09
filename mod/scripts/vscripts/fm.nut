@@ -147,6 +147,9 @@ struct {
     int skipThreshold
     array<entity> skipVoters
 
+    bool statsEnabled
+    string statsHost
+
     bool hpEnabled
     table<entity, int> hpPlayers
 
@@ -327,6 +330,10 @@ void function fm_Init() {
     file.skipPercentage = GetConVarFloat("fm_skip_percentage")
     file.skipVoters = []
 
+    // stats
+    file.statsEnabled = GetConVarBool("fm_stats_enabled")
+    file.statsHost = GetConVarString("fm_stats_host")
+
     // hp
     file.hpEnabled = GetConVarBool("fm_hp_enabled")
     file.hpPlayers = {}
@@ -462,6 +469,15 @@ void function fm_Init() {
         "",
         "!skip (force) => vote to skip current map (or force)",
         C_FORCE
+    )
+
+    CommandInfo cmdStats = NewCommandInfo(
+        ["!stats"],
+        CommandStats,
+        0, 1,
+        "!stats (player name or UID) => show your (or someone else's) stats on the server",
+        "",
+        ""
     )
 
     CommandInfo cmdHp = NewCommandInfo(
@@ -730,6 +746,10 @@ void function fm_Init() {
     if (file.skipEnabled && totalMaps > 1) {
         file.commands.append(cmdSkip)
         AddCallback_OnClientDisconnected(Skip_OnClientDisconnected)
+    }
+
+    if (file.statsEnabled) {
+        file.commands.append(cmdStats)
     }
 
     if (file.hpEnabled) {
@@ -2227,6 +2247,76 @@ void function Skip_OnClientDisconnected(entity player) {
         file.skipVoters.remove(file.skipVoters.find(player))
     }
 }
+
+//------------------------------------------------------------------------------
+// stats
+//------------------------------------------------------------------------------
+bool function CommandStats(entity player, array<string> args) {
+    string nameOrUID = player.GetUID()
+    if (0 < args.len()) {
+        nameOrUID = args[0]
+    }
+
+    Log("[CommandStats] " + nameOrUID)
+
+    string url = file.statsHost + "/players/" + nameOrUID
+    Log("[CommandStats] " + url)
+
+    void functionref( HttpRequestResponse ) onSuccess = void function (HttpRequestResponse response) : (player, nameOrUID)
+    {
+        if (NSIsSuccessHttpCode(response.statusCode)) {
+            Log("[CommandStats] success")
+            table responseTable = DecodeJSON(response.body)
+            string name = ""
+            string uid = ""
+            int kills = 0
+            int deaths = 0
+            float kd = 1.0
+
+            if ("name" in responseTable) {
+                name = expect string(responseTable["name"])
+            }
+
+            if ("uid" in responseTable) {
+                uid = expect string(responseTable["uid"])
+            }
+
+            if ("kills" in responseTable) {
+                kills = expect int(responseTable["kills"])
+            }
+
+            if ("deaths" in responseTable) {
+                deaths = expect int(responseTable["deaths"])
+            }
+
+            if ("kd" in responseTable) {
+                kd = expect float(responseTable["kd"])
+            }
+
+            string prefix = "you have "
+            if (player.GetUID() != uid) {
+                prefix = name + " has "
+            }
+
+            string msg = format("%s %d kills and %d deaths (%f K/D)", prefix, kills, deaths, kd)
+            SendMessage(player, PrivateColor(msg))
+        } else {
+            Log("[CommandStats] not OK")
+            SendMessage(player, ErrorColor("could not find stats for " + nameOrUID))
+        }
+    }
+
+    void functionref( HttpRequestFailure ) onFailure = void function ( HttpRequestFailure failure ) : (player, nameOrUID)
+    {
+        Log("[CommandStats] onFailure")
+        SendMessage(player, ErrorColor("could not find stats for " + nameOrUID))
+    }
+
+    NSHttpGet(url, {}, onSuccess, onFailure)
+
+    return true
+}
+
 
 //------------------------------------------------------------------------------
 // hp

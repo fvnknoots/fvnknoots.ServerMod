@@ -290,6 +290,18 @@
             "DefaultValue": "0.5"
         },
 
+        // 1 = !stats enabled
+        {
+            "Name": "fm_stats_enabled",
+            "DefaultValue": "0"
+        },
+
+        // Nutone API host
+        {
+            "Name": "fm_stats_host",
+            "DefaultValue": "nutone.okudai.dev"
+        },
+
         // 1 = !hp enabled
         {
             "Name": "fm_hp_enabled",
