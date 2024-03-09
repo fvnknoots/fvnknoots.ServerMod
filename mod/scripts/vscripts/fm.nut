@@ -1585,7 +1585,11 @@ void function DoChangeMap(float waitTime) {
         }
     }
 
-    GameRules_ChangeMap(nextMap, GameRules_GetGameMode())
+    if (file.mapsEnabled) {
+        GameRules_ChangeMap(nextMap, GameRules_GetGameMode())
+    } else {
+        GameRules_EndMatch()
+    }
 }
 
 string function GetUsualNextMap() {
