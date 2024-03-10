@@ -334,6 +334,7 @@ void function fm_Init() {
     // stats
     file.statsEnabled = GetConVarBool("fm_stats_enabled")
     file.statsHost = GetConVarString("fm_stats_host")
+    file.nutoneServerId = GetConVarString("nutone_server_id")
 
     // hp
     file.hpEnabled = GetConVarBool("fm_hp_enabled")
@@ -2326,6 +2327,8 @@ bool function CommandStats(entity player, array<string> args) {
         SendMessage(player, ErrorColor("could not find stats for " + targetName))
     }
 
+    table<string, array<string> > params
+    params[ "server_id" ]
     NSHttpGet(url, {}, onSuccess, onFailure)
 
     return true

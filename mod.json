@@ -302,6 +302,11 @@
             "DefaultValue": "nutone.okudai.dev"
         },
 
+        {
+            "Name": "nutone_server_id",
+            "DefaultValue": ""
+        },
+
         // 1 = !hp enabled
         {
             "Name": "fm_hp_enabled",
