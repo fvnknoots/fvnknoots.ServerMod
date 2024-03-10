@@ -31,6 +31,7 @@ struct CommandInfo {
 
 const int PS_MODIFIERS = 1 << 0
 const int PS_ALIVE     = 1 << 1
+const int PS_NOPRINT   = 1 << 2
 
 enum PlayerSearchResultKind {
     DEAD      = -3,
@@ -1219,6 +1220,10 @@ void function Welcome_OnPlayerRespawned(entity player) {
     }
 
     SendMessage(player, PrivateColor(file.welcome))
+    if (file.statsEnabled) {
+        CommandStats(player, [])
+    }
+
     bool hasNoteNumber = file.welcomeNotes.len() > 1
     for (int i = 0; i < file.welcomeNotes.len(); i++) {
         string notePrefix = hasNoteNumber ? format("note %d: ", i + 1) : "note: "
@@ -2252,9 +2257,20 @@ void function Skip_OnClientDisconnected(entity player) {
 // stats
 //------------------------------------------------------------------------------
 bool function CommandStats(entity player, array<string> args) {
+    entity targetPlayer = player
     string nameOrUID = player.GetUID()
+    string targetName = player.GetPlayerName()
     if (0 < args.len()) {
+        string searchStr = args[0]
+        targetName = args[0]
         nameOrUID = args[0]
+
+        PlayerSearchResult result = RunPlayerSearch(player, searchStr, PS_NOPRINT)
+        if (result.kind == PlayerSearchResultKind.SINGLE) {
+            entity foundPlayer = result.players[0]
+            targetName = foundPlayer.GetPlayerName()
+            nameOrUID = foundPlayer.GetUID()
+        }
     }
 
     Log("[CommandStats] " + nameOrUID)
@@ -2262,7 +2278,7 @@ bool function CommandStats(entity player, array<string> args) {
     string url = file.statsHost + "/players/" + nameOrUID
     Log("[CommandStats] " + url)
 
-    void functionref( HttpRequestResponse ) onSuccess = void function (HttpRequestResponse response) : (player, nameOrUID)
+    void functionref( HttpRequestResponse ) onSuccess = void function (HttpRequestResponse response) : (player, targetName, nameOrUID)
     {
         if (NSIsSuccessHttpCode(response.statusCode)) {
             Log("[CommandStats] success")
@@ -2271,45 +2287,53 @@ bool function CommandStats(entity player, array<string> args) {
             string uid = ""
             int kills = 0
             int deaths = 0
-            float kd = 1.0
+            // float kd = 1.0
 
             if ("name" in responseTable) {
                 name = expect string(responseTable["name"])
+                Log("[CommandStats] name = " + name)
             }
 
             if ("uid" in responseTable) {
                 uid = expect string(responseTable["uid"])
+                Log("[CommandStats] uid = " + uid)
             }
 
             if ("kills" in responseTable) {
                 kills = expect int(responseTable["kills"])
+                Log("[CommandStats] kills = " + kills)
             }
 
             if ("deaths" in responseTable) {
                 deaths = expect int(responseTable["deaths"])
+                Log("[CommandStats] deaths = " + deaths)
             }
 
-            if ("kd" in responseTable) {
-                kd = expect float(responseTable["kd"])
-            }
+            // TODO: figure out how to extract float
+            //if ("kd" in responseTable) {
+            //    kd = expect float(responseTable["kd"])
+            //    Log("[CommandStats] kd = " + kd)
+            //}
 
-            string prefix = "you have "
+
+            string prefix = "you have"
             if (player.GetUID() != uid) {
-                prefix = name + " has "
+                prefix = name + " has"
             }
 
-            string msg = format("%s %d kills and %d deaths (%f K/D)", prefix, kills, deaths, kd)
+            float kd = kills / max(deaths, 1)
+            string msg = format("%s %d kills and %d deaths (%.2f K/D)", prefix, kills, deaths, kd)
             SendMessage(player, PrivateColor(msg))
         } else {
             Log("[CommandStats] not OK")
-            SendMessage(player, ErrorColor("could not find stats for " + nameOrUID))
+            SendMessage(player, ErrorColor(format("could not find stats for '%s'", targetName)))
         }
     }
 
-    void functionref( HttpRequestFailure ) onFailure = void function ( HttpRequestFailure failure ) : (player, nameOrUID)
+    void functionref( HttpRequestFailure ) onFailure = void function ( HttpRequestFailure failure ) : (player, targetName)
     {
         Log("[CommandStats] onFailure")
-        SendMessage(player, ErrorColor("could not find stats for " + nameOrUID))
+        SendMessage(player, ErrorColor("could not find stats for " + targetName))
     }
 
     NSHttpGet(url, {}, onSuccess, onFailure)
@@ -3055,13 +3079,17 @@ PlayerSearchResult function RunPlayerSearch(
 
     result.players = FindPlayersBySubstring(playerName)
     if (result.players.len() == 0) {
-        SendMessage(commandUser, ErrorColor("player '" + playerName + "' not found"))
+        if ((flags & PS_NOPRINT) == 0) {
+            SendMessage(commandUser, ErrorColor("player '" + playerName + "' not found"))
+        }
         result.kind = PlayerSearchResultKind.NOT_FOUND
         return result
     }
 
     if (result.players.len() > 1) {
-        SendMessage(commandUser, ErrorColor("multiple matches for player '" + playerName + "', be more specific"))
+        if ((flags & PS_NOPRINT) == 0) {
+            SendMessage(commandUser, ErrorColor("multiple matches for player '" + playerName + "', be more specific"))
+        }
         result.kind = PlayerSearchResultKind.MULTIPLE
         return result
     }
