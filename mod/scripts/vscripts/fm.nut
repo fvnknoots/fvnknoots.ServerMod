@@ -2273,15 +2273,11 @@ bool function CommandStats(entity player, array<string> args) {
         }
     }
 
-    Log("[CommandStats] " + nameOrUID)
-
     string url = file.statsHost + "/players/" + nameOrUID
-    Log("[CommandStats] " + url)
 
     void functionref( HttpRequestResponse ) onSuccess = void function (HttpRequestResponse response) : (player, targetName, nameOrUID)
     {
         if (NSIsSuccessHttpCode(response.statusCode)) {
-            Log("[CommandStats] success")
             table responseTable = DecodeJSON(response.body)
             string name = ""
             string uid = ""
@@ -2291,22 +2287,18 @@ bool function CommandStats(entity player, array<string> args) {
 
             if ("name" in responseTable) {
                 name = expect string(responseTable["name"])
-                Log("[CommandStats] name = " + name)
             }
 
             if ("uid" in responseTable) {
                 uid = expect string(responseTable["uid"])
-                Log("[CommandStats] uid = " + uid)
             }
 
             if ("kills" in responseTable) {
                 kills = expect int(responseTable["kills"])
-                Log("[CommandStats] kills = " + kills)
             }
 
             if ("deaths" in responseTable) {
                 deaths = expect int(responseTable["deaths"])
-                Log("[CommandStats] deaths = " + deaths)
             }
 
             // TODO: figure out how to extract float
@@ -2325,14 +2317,12 @@ bool function CommandStats(entity player, array<string> args) {
             string msg = format("%s %d kills and %d deaths (%.2f K/D)", prefix, kills, deaths, kd)
             SendMessage(player, PrivateColor(msg))
         } else {
-            Log("[CommandStats] not OK")
             SendMessage(player, ErrorColor(format("could not find stats for '%s'", targetName)))
         }
     }
 
     void functionref( HttpRequestFailure ) onFailure = void function ( HttpRequestFailure failure ) : (player, targetName)
     {
-        Log("[CommandStats] onFailure")
         SendMessage(player, ErrorColor("could not find stats for " + targetName))
     }
 
