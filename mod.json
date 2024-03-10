@@ -293,7 +293,7 @@
         // 1 = !stats enabled
         {
             "Name": "fm_stats_enabled",
-            "DefaultValue": "0"
+            "DefaultValue": "1"
         },
 
         // Nutone API host
