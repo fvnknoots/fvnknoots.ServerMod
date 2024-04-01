@@ -150,6 +150,7 @@ struct {
 
     bool statsEnabled
     string statsHost
+    string nutoneServerId
 
     bool hpEnabled
     table<entity, int> hpPlayers
@@ -1541,6 +1542,9 @@ bool function CommandMaps(entity player, array<string> args) {
     if (file.nextMapEnabled && file.nextMapOnlyMaps.len() > 0) {
         string voteOnlyMaps = MapsString(file.nextMapOnlyMaps)
         string msg = format("maps by vote only (with %d players or less): %s", file.nextMapOnlyMapsMaxPlayers, voteOnlyMaps)
+        if (file.nextMapOnlyMapsMaxPlayers <= 0) {
+            msg = format("maps by vote only: %s", voteOnlyMaps)
+        }
         SendMessage(player, PrivateColor(msg))
     }
 
@@ -1584,7 +1588,10 @@ bool function CommandNextMap(entity player, array<string> args) {
     }
 
     int playerCount = GetPlayerArray().len()
-    if (file.nextMapOnlyMaps.contains(nextMap) && !file.maps.contains(nextMap) && playerCount > file.nextMapOnlyMapsMaxPlayers) {
+    if (file.nextMapOnlyMaps.contains(nextMap)
+    && !file.maps.contains(nextMap)
+    && playerCount > file.nextMapOnlyMapsMaxPlayers
+    && file.nextMapOnlyMapsMaxPlayers > 0) {
         string msg = format("you can only vote for %s when there are %d players or less", MapName(nextMap), file.nextMapOnlyMapsMaxPlayers)
         SendMessage(player, ErrorColor(msg))
         return false
@@ -2328,8 +2335,8 @@ bool function CommandStats(entity player, array<string> args) {
     }
 
     table<string, array<string> > params
-    params[ "server_id" ]
-    NSHttpGet(url, {}, onSuccess, onFailure)
+    params[ "server_id" ] <- [file.nutoneServerId]
+    NSHttpGet(url, params, onSuccess, onFailure)
 
     return true
 }
@@ -2889,11 +2896,15 @@ void function Killstreak_OnPlayerKilled(entity victim, entity attacker, var dama
     int victimKillstreak = GetKillstreak(victim)
     int attackerKillstreak = GetKillstreak(attacker)
     if (victimKillstreak >= file.killstreakIncrement) {
-        string msg = ErrorColor(attackerName)
-        msg += AnnounceColor(" ended ")
-        msg += ErrorColor(victimName + "'s")
-        msg += AnnounceColor(" " + victimKillstreak + "-kill streak")
-        AnnounceMessage(msg)
+        //string msg = ErrorColor(attackerName)
+        //msg += AnnounceColor(" ended ")
+        //msg += ErrorColor(victimName + "'s")
+        //msg += AnnounceColor(" " + victimKillstreak + "-kill streak")
+        //AnnounceMessage(msg)
+        string msg = format("%s ended %s's %d-kill streak", attackerName, victimName, victimKillstreak)
+        foreach (entity target in GetPlayerArray()) {
+            NSSendPopUpMessageToPlayer(target, msg)
+        }
     }
 
     SetKillstreak(victim, 0)
@@ -2903,9 +2914,13 @@ void function Killstreak_OnPlayerKilled(entity victim, entity attacker, var dama
 
     attackerKillstreak += 1
     if (attackerKillstreak % file.killstreakIncrement == 0) {
-        string msg = ErrorColor(attackerName)
-        msg += AnnounceColor(" is on a " + attackerKillstreak + "-kill streak")
-        AnnounceMessage(msg)
+        //string msg = ErrorColor(attackerName)
+        //msg += AnnounceColor(" is on a " + attackerKillstreak + "-kill streak")
+        //AnnounceMessage(msg)
+        string msg = format("%s is on a %d-kill streak", attackerName, attackerKillstreak)
+        foreach (entity target in GetPlayerArray()) {
+            NSSendPopUpMessageToPlayer(target, msg)
+        }
     }
 
     SetKillstreak(attacker, attackerKillstreak)

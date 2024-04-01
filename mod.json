@@ -155,9 +155,10 @@
 
         // allow voting for nextmap-only maps only if player count is equal or less than this
         // this prevents voting for small maps if you have lots of players
+        // set to 0 or negative to disable
         {
             "Name": "fm_nextmap_only_maps_max_players",
-            "DefaultValue": "8"
+            "DefaultValue": "0"
         },
 
         // 1 = show a hint to use !nextmap during the match
