@@ -2896,11 +2896,11 @@ void function Killstreak_OnPlayerKilled(entity victim, entity attacker, var dama
     int victimKillstreak = GetKillstreak(victim)
     int attackerKillstreak = GetKillstreak(attacker)
     if (victimKillstreak >= file.killstreakIncrement) {
-        //string msg = ErrorColor(attackerName)
-        //msg += AnnounceColor(" ended ")
-        //msg += ErrorColor(victimName + "'s")
-        //msg += AnnounceColor(" " + victimKillstreak + "-kill streak")
-        //AnnounceMessage(msg)
+        string msg = ErrorColor(attackerName)
+        msg += AnnounceColor(" ended ")
+        msg += ErrorColor(victimName + "'s")
+        msg += AnnounceColor(" " + victimKillstreak + "-kill streak")
+        AnnounceMessage(msg)
         string msg = format("%s ended %s's %d-kill streak", attackerName, victimName, victimKillstreak)
         foreach (entity target in GetPlayerArray()) {
             NSSendPopUpMessageToPlayer(target, msg)
@@ -2914,9 +2914,9 @@ void function Killstreak_OnPlayerKilled(entity victim, entity attacker, var dama
 
     attackerKillstreak += 1
     if (attackerKillstreak % file.killstreakIncrement == 0) {
-        //string msg = ErrorColor(attackerName)
-        //msg += AnnounceColor(" is on a " + attackerKillstreak + "-kill streak")
-        //AnnounceMessage(msg)
+        string msg = ErrorColor(attackerName)
+        msg += AnnounceColor(" is on a " + attackerKillstreak + "-kill streak")
+        AnnounceMessage(msg)
         string msg = format("%s is on a %d-kill streak", attackerName, attackerKillstreak)
         foreach (entity target in GetPlayerArray()) {
             NSSendPopUpMessageToPlayer(target, msg)
