@@ -2902,7 +2902,7 @@ void function Killstreak_OnPlayerKilled(entity victim, entity attacker, var dama
         msg += ErrorColor(victimName + "'s")
         msg += AnnounceColor(" " + victimKillstreak + "-kill streak")
         AnnounceMessage(msg)
-        string msg = format("%s ended %s's %d-kill streak", attackerName, victimName, victimKillstreak)
+        msg = format("%s ended %s's %d-kill streak", attackerName, victimName, victimKillstreak)
         foreach (entity target in GetPlayerArray()) {
             NSSendPopUpMessageToPlayer(target, msg)
         }
@@ -2918,7 +2918,7 @@ void function Killstreak_OnPlayerKilled(entity victim, entity attacker, var dama
         string msg = ErrorColor(attackerName)
         msg += AnnounceColor(" is on a " + attackerKillstreak + "-kill streak")
         AnnounceMessage(msg)
-        string msg = format("%s is on a %d-kill streak", attackerName, attackerKillstreak)
+        msg = format("%s is on a %d-kill streak", attackerName, attackerKillstreak)
         foreach (entity target in GetPlayerArray()) {
             NSSendPopUpMessageToPlayer(target, msg)
         }
