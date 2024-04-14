@@ -1978,7 +1978,8 @@ float function CalculateKillScore(entity player) {
     float ad = float(assists) / float(deaths)
     float assistWeight = 0.5 // -50% importance for assists
 
-    return kd + (ad * assistWeight)
+    //return kd + (ad * assistWeight) // OLD
+    return float(kills) - float(deaths)
 }
 
 int function PlayerScoreSort(PlayerScore a, PlayerScore b) {
