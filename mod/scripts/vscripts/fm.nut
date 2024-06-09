@@ -101,7 +101,7 @@ struct {
     table<string, KickInfo> kickTable
     array<string> kickedPlayers
     array<string> kickedNetworks
-    
+
     bool mapsEnabled
     array<string> maps
     int mapRotation
@@ -493,7 +493,7 @@ void function fm_Init() {
     )
 
     CommandInfo cmdRoll = NewCommandInfo(
-        ["!roll"],  
+        ["!roll"],
         CommandRoll,
         0, 0,
         "!roll => roll a number between 0 and 100",
@@ -553,7 +553,7 @@ void function fm_Init() {
     )
 
     CommandInfo cmdYell = NewCommandInfo(
-        ["!yell"],  
+        ["!yell"],
         CommandYell,
         1, NOMAX,
         "!yell ... => yell something",
@@ -859,7 +859,7 @@ void function fm_Init() {
 
             CustomCommand command
             command.name = pair[0]
-            command.lines = [] 
+            command.lines = []
             command.lines.append(pair[1])
             file.customCommands.append(command)
         }
@@ -1619,10 +1619,19 @@ void function DoChangeMap(float waitTime) {
     }
 
     if (file.mapsEnabled) {
-        GameRules_ChangeMap(nextMap, GameRules_GetGameMode())
+        GameRules_ChangeMap(nextMap, FD_Difficulty_handler())
     } else {
         GameRules_EndMatch()
     }
+}
+
+string function FD_Difficulty_handler()
+{
+    if (GetConVarString("fm_fd_difficulty") == "")
+    {
+        return GameRules_GetGameMode()
+    }
+    return GetConVarString("fm_fd_difficulty")
 }
 
 string function GetUsualNextMap() {
@@ -1635,7 +1644,7 @@ string function GetUsualNextMap() {
 
     if (file.mapRotation == MapRotation.LINEAR) {
         return GetLinearNextMap()
-    } 
+    }
 
     return GetRandomNextMap()
 }
@@ -2120,7 +2129,7 @@ void function DoAutobalance(int fromTeam) {
         playerToSwitch = prio1[0]
     }
 
-    int toTeam = GetOtherTeam(fromTeam) 
+    int toTeam = GetOtherTeam(fromTeam)
     SetTeam(playerToSwitch, toTeam)
 
     string msg = "you've been moved to the smaller team"
@@ -2202,7 +2211,7 @@ bool function CommandSkip(entity player, array<string> args) {
         SendMessage(player, ErrorColor("match is over already"))
         return false
     }
-    
+
     bool isForced = args.len() == 1
     if (IsAuthenticatedAdmin(player) && isForced) {
         DoSkip()
@@ -2824,7 +2833,7 @@ bool function CommandRui(entity player, array<string> args) {
                 thread Rui_DeleteStatusMessageOnPlayer_Threaded(target, id)
             }
             break
-            
+
 
         default:
             SendMessage(player, ErrorColor("invalid subcommand: " + kind))
@@ -2959,7 +2968,7 @@ void function Pitfalls_OnPlayerKilled(entity victim, entity attacker, var damage
     if (!victim.IsPlayer() || GetGameState() != eGameState.Playing) {
         return
     }
-    
+
     int damageSourceId = DamageInfo_GetDamageSourceIdentifier(damageInfo)
     if (damageSourceId != eDamageSourceId.fall) {
         return
@@ -3019,7 +3028,7 @@ void function JokeKills_OnPlayerKilled(entity victim, entity attacker, var damag
     if (!attacker.IsPlayer() || !victim.IsPlayer() || GetGameState() != eGameState.Playing) {
         return
     }
-    
+
     int damageSourceId = DamageInfo_GetDamageSourceIdentifier(damageInfo)
     string verb
     switch (damageSourceId) {
