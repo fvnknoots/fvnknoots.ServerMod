@@ -2301,13 +2301,14 @@ bool function CommandStats(entity player, array<string> args) {
             if ("uid" in responseTable) {
                 uid = expect string(responseTable["uid"])
             }
-
-            if ("kills" in responseTable) {
-                kills = expect int(responseTable["kills"])
-            }
-
-            if ("deaths" in responseTable) {
-                deaths = expect int(responseTable["deaths"])
+            
+            if ("total" in responseTable){
+                if ("kills" in expect table(responseTable["total"])) {
+                    kills = expect int(expect table(responseTable["total"])["kills"])
+                }
+                if ("deaths" in expect table(responseTable["total"])) {
+                    deaths = expect int(expect table(responseTable["total"])["deaths"])
+                }
             }
 
             // TODO: figure out how to extract float
