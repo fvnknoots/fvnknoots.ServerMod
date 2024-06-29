@@ -191,12 +191,6 @@
             "DefaultValue": "3"
         },
 
-        // 1 = kills the player using !switch (to prevent abuse)
-        {
-            "Name": "fm_switch_kill",
-            "DefaultValue": "1"
-        },
-
         // 1 = !teambalance enabled
         {
             "Name": "fm_balance_enabled",

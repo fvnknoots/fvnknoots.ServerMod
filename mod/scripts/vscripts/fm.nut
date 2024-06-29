@@ -116,7 +116,6 @@ struct {
     bool switchEnabled
     int switchDiff
     int switchLimit
-    bool switchKill
     table<string, int> switchCountTable
 
     bool balanceEnabled
@@ -296,7 +295,6 @@ void function fm_Init() {
     file.switchEnabled = GetConVarBool("fm_switch_enabled")
     file.switchDiff = GetConVarInt("fm_switch_diff")
     file.switchLimit = GetConVarInt("fm_switch_limit")
-    file.switchKill = GetConVarBool("fm_switch_kill")
     file.switchCountTable = {}
 
     // balance
@@ -1808,7 +1806,7 @@ bool function CommandSwitch(entity player, array<string> args) {
     }
 
     // ctf
-    if (!file.switchKill && PlayerHasEnemyFlag(target)) {
+    if (PlayerHasEnemyFlag(target)) {
         SendMessage(player, ErrorColor(flagMsg))
         return false
     }
@@ -1834,11 +1832,6 @@ bool function CommandSwitch(entity player, array<string> args) {
 
     if (!isAdminSwitch) {
         file.switchCountTable[targetUid] <- switchCount
-    }
-
-    // ctf: if player is holding a flag, he gotta die *before* setting the team
-    if (!isAdminSwitch && file.switchKill && IsAlive(target)) {
-        target.Die()
     }
 
     if (isAdminSwitch) {
