@@ -150,6 +150,7 @@ struct {
     bool statsEnabled
     string statsHost
     string nutoneServerId
+    table<string, float> nutonePlayerKds
 
     bool hpEnabled
     table<entity, int> hpPlayers
@@ -334,6 +335,7 @@ void function fm_Init() {
     file.statsEnabled = GetConVarBool("fm_stats_enabled")
     file.statsHost = GetConVarString("fm_stats_host")
     file.nutoneServerId = GetConVarString("nutone_server_id")
+    file.nutonePlayerKds = {}
 
     // hp
     file.hpEnabled = GetConVarBool("fm_hp_enabled")
@@ -1900,7 +1902,7 @@ void function DoBalance() {
         RecalculatePvPTeamScores()
     }
 
-    string msg = "teams have been rebalanced"
+    string msg = "teams have been rebalanced by k/d (data from Nutone API if found)"
     AnnounceMessage(AnnounceColor(msg))
     if (GetGameState() < eGameState.Postmatch) {
         AnnounceInfoMessage(msg)
@@ -1971,8 +1973,14 @@ float function CalculateKillScore(entity player) {
     float ad = float(assists) / float(deaths)
     float assistWeight = 0.5 // -50% importance for assists
 
-    //return kd + (ad * assistWeight) // OLD
-    return float(kills) - float(deaths)
+    float ingameScore = kd + (ad * assistWeight)
+    string uid = player.GetUID()
+    if (uid in file.nutonePlayerKds) { 
+        Debug("balancing player " + player.GetPlayerName() + " with data from Nutone API")
+        return file.nutonePlayerKds[uid]
+    }
+
+    return ingameScore
 }
 
 int function PlayerScoreSort(PlayerScore a, PlayerScore b) {
@@ -2317,6 +2325,7 @@ bool function CommandStats(entity player, array<string> args) {
             }
 
             float kd = kills / max(deaths, 1)
+            file.nutonePlayerKds[uid] <- kd // Store for !teambalance
             string msg = format("%s %d kills and %d deaths (%.2f K/D)", prefix, kills, deaths, kd)
             SendMessage(player, PrivateColor(msg))
         } else {
