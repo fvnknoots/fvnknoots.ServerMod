@@ -1891,10 +1891,32 @@ void function DoBalance() {
     }
 
     array<PlayerScore> scores = GetPlayerScores(switchablePlayers)
-    for (int i = 0; i < scores.len(); i++) {
-        entity player = scores[i].player
-        int oldTeam = player.GetTeam()
-        int newTeam = IsEven(i) ? TEAM_IMC : TEAM_MILITIA
+
+    float imcScore = 0.0
+    int imcCount = 0
+    float militiaScore = 0.0
+    int militiaCount = 0
+
+    for (int i = 0; i < players.len(); i++) {
+        int newTeam = imcCount <= militiaCount ? TEAM_IMC : TEAM_MILITIA
+        PlayerScore playerScore
+        if (newTeam == TEAM_IMC) {
+            playerScore = imcScore <= militiaScore ? scores.remove(0) : scores.pop()
+        } else {
+            playerScore = militiaScore <= imcScore ? scores.remove(0) : scores.pop()
+        }
+
+        entity player = playerScore.player
+        float score = playerScore.val
+
+        if (newTeam == TEAM_IMC) {
+            imcScore += score
+            imcCount += 1
+        } else {
+            militiaScore += score
+            militiaCount += 1
+        }
+
         SetTeam(player, newTeam)
     }
 
@@ -1976,8 +1998,7 @@ float function CalculateKillScore(entity player) {
     float ingameScore = kd + (ad * assistWeight)
     string uid = player.GetUID()
     if (uid in file.nutonePlayerKds) { 
-        Debug("balancing player " + player.GetPlayerName() + " with data from Nutone API")
-        return file.nutonePlayerKds[uid]
+        return (file.nutonePlayerKds[uid] + ingameScore) / 2.0 // average between nutone data and match data
     }
 
     return ingameScore
