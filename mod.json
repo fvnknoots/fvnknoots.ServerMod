@@ -191,6 +191,12 @@
             "DefaultValue": "3"
         },
 
+        // 1 = put newly players on weaker team if team sizes are equal
+        {
+            "Name": "fm_balance_on_join",
+            "DefaultValue": "1"
+        },
+
         // 1 = !teambalance enabled
         {
             "Name": "fm_balance_enabled",

@@ -118,6 +118,7 @@ struct {
     int switchLimit
     table<string, int> switchCountTable
 
+    bool balanceOnJoin
     bool balanceEnabled
     float balancePercentage
     int balanceMinPlayers
@@ -299,6 +300,7 @@ void function fm_Init() {
     file.switchCountTable = {}
 
     // balance
+    file.balanceOnJoin = GetConVarBool("fm_balance_on_join")
     file.balanceEnabled = GetConVarBool("fm_balance_enabled")
     file.balancePercentage = GetConVarFloat("fm_balance_percentage")
     file.balanceMinPlayers = GetConVarInt("fm_balance_min_players")
@@ -720,6 +722,10 @@ void function fm_Init() {
 
     if (file.switchEnabled && !IsFFAGame()) {
         file.commands.append(cmdSwitch)
+    }
+
+    if (file.balanceOnJoin && !IsFFAGame()) {
+        AddCallback_OnClientConnected(BalanceOnJoin_OnClientConnected)
     }
 
     if (file.balanceEnabled && !IsFFAGame()) {
@@ -2014,6 +2020,32 @@ int function PlayerScoreSort(PlayerScore a, PlayerScore b) {
 
 void function Balance_Postmatch() {
     DoBalance()
+}
+
+void function BalanceOnJoin_OnClientConnected(entity player) {
+    array<entity> imcPlayers = GetPlayerArrayOfTeam(TEAM_IMC)
+    array<entity> militiaPlayers = GetPlayerArrayOfTeam(TEAM_MILITIA)
+
+    int imcCount = imcPlayers.len()
+    int militiaCount = militiaPlayers.len()
+
+    int imcKills = 0
+    int militiaKills = 0
+    foreach (entity player in imcPlayers) {
+        imcKills += player.GetPlayerGameStat(PGS_KILLS)
+    }
+
+    foreach (entity player in militiaPlayers) {
+        militiaKills += player.GetPlayerGameStat(PGS_KILLS)
+    }
+
+    if (imcCount == militiaCount) {
+        if (imcKills <= militiaKills) {
+            SetTeam(player, TEAM_IMC)
+        } else {
+            SetTeam(player, TEAM_MILITIA)
+        }
+    }
 }
 
 void function Balance_OnClientDisconnected(entity player) {
