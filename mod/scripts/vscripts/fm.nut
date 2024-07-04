@@ -2023,28 +2023,32 @@ void function Balance_Postmatch() {
 }
 
 void function BalanceOnJoin_OnClientConnected(entity player) {
-    array<entity> imcPlayers = GetPlayerArrayOfTeam(TEAM_IMC)
-    array<entity> militiaPlayers = GetPlayerArrayOfTeam(TEAM_MILITIA)
+    int sourceTeam = player.GetTeam()
+    int otherTeam = GetOtherTeam(sourceTeam)
 
-    int imcCount = imcPlayers.len()
-    int militiaCount = militiaPlayers.len()
+    array<entity> sourceTeamPlayers = GetPlayerArrayOfTeam(sourceTeam)
+    array<entity> otherTeamPlayers = GetPlayerArrayOfTeam(otherTeam)
 
-    int imcKills = 0
-    int militiaKills = 0
-    foreach (entity player in imcPlayers) {
-        imcKills += player.GetPlayerGameStat(PGS_KILLS)
+    int sourceTeamCount = sourceTeamPlayers.len()
+    int otherTeamCount = otherTeamPlayers.len()
+
+    int sourceTeamKills = 0
+    int otherTeamKills = 0
+    foreach (entity p in sourceTeamPlayers) {
+        sourceTeamKills += p.GetPlayerGameStat(PGS_KILLS)
     }
 
-    foreach (entity player in militiaPlayers) {
-        militiaKills += player.GetPlayerGameStat(PGS_KILLS)
+    foreach (entity p in otherTeamPlayers) {
+        otherTeamKills += player.GetPlayerGameStat(PGS_KILLS)
     }
 
-    if (imcCount == militiaCount) {
-        if (imcKills <= militiaKills) {
-            SetTeam(player, TEAM_IMC)
-        } else {
-            SetTeam(player, TEAM_MILITIA)
-        }
+    // new game
+    if (sourceTeamKills == 0 && otherTeamKills == 0) {
+        return
+    }
+
+    if (sourceTeamCount > otherTeamCount && sourceTeamKills > otherTeamKills) {
+        SetTeam(player, otherTeam)
     }
 }
 
