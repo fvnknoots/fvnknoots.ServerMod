@@ -2344,6 +2344,11 @@ bool function CommandStats(entity player, array<string> args) {
 
     void functionref( HttpRequestResponse ) onSuccess = void function (HttpRequestResponse response) : (player, targetName, nameOrUID)
     {
+        // needed if player DC's before request finish
+        if (!IsValid(player)) {
+            return
+        }
+
         if (NSIsSuccessHttpCode(response.statusCode)) {
             table responseTable = DecodeJSON(response.body)
             string name = ""
