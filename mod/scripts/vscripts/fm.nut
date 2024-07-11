@@ -2032,6 +2032,21 @@ void function Balance_Postmatch() {
 }
 
 void function BalanceOnJoin_OnClientConnected(entity player) {
+    thread BalanceOnJoin_Threaded(player)
+}
+
+void function BalanceOnJoin_Threaded(entity player) {
+    // new game
+    if (Time() <= 30.0) {
+        return
+    }
+
+    wait 1.0
+
+    if (!IsValid(player)) {
+        return
+    }
+
     int sourceTeam = player.GetTeam()
     int otherTeam = GetOtherTeam(sourceTeam)
 
@@ -2041,23 +2056,23 @@ void function BalanceOnJoin_OnClientConnected(entity player) {
     int sourceTeamCount = sourceTeamPlayers.len()
     int otherTeamCount = otherTeamPlayers.len()
 
-    int sourceTeamKills = 0
-    int otherTeamKills = 0
+    float sourceTeamScore = 0.0
+    float otherTeamScore = 0.0
     foreach (entity p in sourceTeamPlayers) {
-        sourceTeamKills += p.GetPlayerGameStat(PGS_KILLS)
+        sourceTeamScore += CalculateKillScore(p)
+
     }
 
     foreach (entity p in otherTeamPlayers) {
-        otherTeamKills += player.GetPlayerGameStat(PGS_KILLS)
+        otherTeamScore += CalculateKillScore(p)
     }
 
-    // new game
-    if (sourceTeamKills == 0 && otherTeamKills == 0) {
-        return
-    }
-
-    if (sourceTeamCount > otherTeamCount && sourceTeamKills > otherTeamKills) {
+    if (sourceTeamCount > otherTeamCount && sourceTeamScore > otherTeamScore) {
         SetTeam(player, otherTeam)
+
+        string msg = "you've been moved to the weaker team"
+        SendInfoMessage(player, msg)
+        SendMessage(player, PrivateColor(msg))
     }
 }
 
