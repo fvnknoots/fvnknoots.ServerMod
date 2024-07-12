@@ -147,6 +147,12 @@
             "DefaultValue": "1"
         },
 
+        // enable maps not in normal rotation, only by !nextmap voting
+        {
+            "Name": "fm_nextmap_only_maps_enabled",
+            "DefaultValue": "1"
+        },
+
         // maps not in normal rotation, only by !nextmap voting
         {
             "Name": "fm_nextmap_only_maps", 

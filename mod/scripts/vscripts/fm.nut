@@ -106,6 +106,7 @@ struct {
     array<string> maps
     int mapRotation
     bool nextMapEnabled
+    bool nextMapOnlyMapsEnabled
     array<string> nextMapOnlyMaps
     int nextMapOnlyMapsMaxPlayers
     table<entity, string> nextMapVoteTable
@@ -275,6 +276,7 @@ void function fm_Init() {
         file.maps.append(map)
     }
     file.nextMapEnabled = GetConVarBool("fm_nextmap_enabled")
+    file.nextMapOnlyMapsEnabled = GetConVarBool("fm_nextmap_only_maps_enabled")
     file.nextMapOnlyMaps = []
     file.nextMapOnlyMapsMaxPlayers = GetConVarInt("fm_nextmap_only_maps_max_players")
     file.nextMapVoteTable = {}
@@ -282,15 +284,16 @@ void function fm_Init() {
     file.nextMapHintedPlayers = []
     file.nextMapRepeatEnabled = GetConVarBool("fm_nextmap_repeat_enabled")
 
-    array<string> nextMapOnlyMaps = split(GetConVarString("fm_nextmap_only_maps"), ",")
-    foreach (string dirtyMap in nextMapOnlyMaps) {
-        string map = strip(dirtyMap)
-        if (!IsValidMap(map)) {
-            Log("ignoring invalid map '" + map + "'")
-            continue
+    if (file.nextMapOnlyMapsEnabled) {
+        array<string> nextMapOnlyMaps = split(GetConVarString("fm_nextmap_only_maps"), ",")
+        foreach (string dirtyMap in nextMapOnlyMaps) {
+            string map = strip(dirtyMap)
+            if (!IsValidMap(map)) {
+                Log("ignoring invalid map '" + map + "'")
+                continue
+            }
+            file.nextMapOnlyMaps.append(map)
         }
-
-        file.nextMapOnlyMaps.append(map)
     }
 
     // switch
@@ -1411,6 +1414,11 @@ bool function CommandKick(entity player, array<string> args) {
     return true
 }
 
+void function KickPlayer_Threaded(entity player, bool announce = true) {
+    wait 1.0
+    KickPlayer(player, announce)
+}
+
 void function KickPlayer(entity player, bool announce = true) {
     string playerUid = player.GetUID()
     if (playerUid in file.kickTable) {
@@ -1444,7 +1452,7 @@ void function Kick_Callback(entity player) {
     if (file.kickedNetworks.contains(playerNetwork)) {
         string msg = format("[Kick_Callback] kicking player %s due to network match: %s", playerDesc, playerNetwork)
         Log(msg)
-        KickPlayer(player, false)
+        KickPlayer_Threaded(player, false)
         return
     }
 #endif
@@ -1452,7 +1460,7 @@ void function Kick_Callback(entity player) {
     if (file.kickedPlayers.contains(player.GetUID())) {
         string msg = format("[Kick_Callback] kicking player %s due to UID match", playerDesc)
         Log(msg)
-        KickPlayer(player, false)
+        KickPlayer_Threaded(player, false)
     }
 }
 
