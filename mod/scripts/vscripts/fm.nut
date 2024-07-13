@@ -1420,6 +1420,10 @@ void function KickPlayer_Threaded(entity player, bool announce = true) {
 }
 
 void function KickPlayer(entity player, bool announce = true) {
+    if (!IsValid(player)) {
+        return
+    }
+
     string playerUid = player.GetUID()
     if (playerUid in file.kickTable) {
         delete file.kickTable[playerUid]
@@ -1452,7 +1456,7 @@ void function Kick_Callback(entity player) {
     if (file.kickedNetworks.contains(playerNetwork)) {
         string msg = format("[Kick_Callback] kicking player %s due to network match: %s", playerDesc, playerNetwork)
         Log(msg)
-        KickPlayer_Threaded(player, false)
+        thread KickPlayer_Threaded(player, false)
         return
     }
 #endif
@@ -1460,7 +1464,7 @@ void function Kick_Callback(entity player) {
     if (file.kickedPlayers.contains(player.GetUID())) {
         string msg = format("[Kick_Callback] kicking player %s due to UID match", playerDesc)
         Log(msg)
-        KickPlayer_Threaded(player, false)
+        thread KickPlayer_Threaded(player, false)
     }
 }
 
@@ -1812,11 +1816,13 @@ bool function CommandSwitch(entity player, array<string> args) {
 
     string enoughMsg = "you've switched teams enough"
     string flagMsg = "can't switch while you're holding the flag"
+    string markedMsg = "can't switch while you're marked"
     string teamMsg = "can't switch, there's enough players on the other team"
     string switchMsg = targetName + " has switched teams"
 
     if (isAdminSwitch) {
         flagMsg = "can't switch " + targetName + ", they're holding a flag"
+        markedMsg = "can't switch " + targetName + ", they're marked"
         teamMsg = "can't switch " + targetName +  ", there's enough players on the other team"
         switchMsg = targetName + "'s team has been switched"
     }
@@ -1833,6 +1839,12 @@ bool function CommandSwitch(entity player, array<string> args) {
     // ctf
     if (PlayerHasEnemyFlag(target)) {
         SendMessage(player, ErrorColor(flagMsg))
+        return false
+    }
+
+    // mfd
+    if (IsMarked(target)) {
+        SendMessage(player, ErrorColor(markedMsg))
         return false
     }
 
@@ -2143,7 +2155,7 @@ void function PvpRebalance_Check() {
 //------------------------------------------------------------------------------
 // autobalance
 //------------------------------------------------------------------------------
-float AUTOBALANCE_INTERVAL = 10
+float AUTOBALANCE_INTERVAL = 1
 
 void function Autobalance_Start() {
     Log("starting autobalance loop")
@@ -3412,7 +3424,24 @@ bool function CanSwitchTeams(entity player) {
         return false
     }
 
+    if (IsMarked(player)) {
+        return false
+    }
+
     return true
+}
+
+bool function IsMarked(entity player) {
+    if (!IsValid(player) || !IsMFD()) {
+        return false
+    }
+
+    int team = player.GetTeam()
+    return player == GetMarked(team)
+}
+
+bool function IsMFD() {
+    return GameRules_GetGameMode() == "mfd"
 }
 
 bool function IsPvP() {
