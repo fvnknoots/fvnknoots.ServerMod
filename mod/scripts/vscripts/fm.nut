@@ -1932,7 +1932,7 @@ void function DoBalance() {
     float militiaScore = 0.0
     int militiaCount = 0
 
-    for (int i = 0; i < players.len(); i++) {
+    for (int i = 0; i < switchablePlayers.len(); i++) {
         int newTeam = imcCount <= militiaCount ? TEAM_IMC : TEAM_MILITIA
         PlayerScore playerScore
         if (newTeam == TEAM_IMC) {
@@ -1980,8 +1980,9 @@ void function RecalculatePvPTeamScores() {
         militiaKills += player.GetPlayerGameStat(PGS_KILLS)
     }
 
-    GameRules_SetTeamScore(TEAM_IMC, imcKills)
-    GameRules_SetTeamScore(TEAM_MILITIA, militiaKills)
+    int average = (imcKills + militiaKills) / 2
+    GameRules_SetTeamScore(TEAM_IMC, average)
+    GameRules_SetTeamScore(TEAM_MILITIA, average)
 }
 
 array<PlayerScore> function GetPlayerScores(array<entity> players) {
@@ -2064,6 +2065,10 @@ void function BalanceOnJoin_Threaded(entity player) {
     wait 1.0
 
     if (!IsValid(player)) {
+        return
+    }
+
+    if (GetPlayerArray().len() <= 2) {
         return
     }
 
