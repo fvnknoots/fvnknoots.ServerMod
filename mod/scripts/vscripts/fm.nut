@@ -2160,7 +2160,7 @@ void function PvpRebalance_Check() {
 //------------------------------------------------------------------------------
 // autobalance
 //------------------------------------------------------------------------------
-float AUTOBALANCE_INTERVAL = 1
+float AUTOBALANCE_INTERVAL = 20
 
 void function Autobalance_Start() {
     Log("starting autobalance loop")
