@@ -1,7 +1,7 @@
 {
     "Name": "fvnknoots.ServerMod",
     "Description": "fvnkhead's server mod",
-    "Version": "1.0.0",
+    "Version": "1.0.1",
     "LoadPriority": 3,
     "RequiredOnClient": false,
 
@@ -306,7 +306,7 @@
         // Nutone API host
         {
             "Name": "fm_stats_host",
-            "DefaultValue": "nutone.okudai.dev"
+            "DefaultValue": "nutone.okudai.dev/v1"
         },
 
         {
