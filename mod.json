@@ -306,7 +306,7 @@
         // Nutone API host
         {
             "Name": "fm_stats_host",
-            "DefaultValue": "nutone.okudai.dev"
+            "DefaultValue": "nutone.okudai.dev/v1"
         },
 
         {
