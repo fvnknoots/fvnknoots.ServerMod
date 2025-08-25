@@ -1645,11 +1645,25 @@ void function DoChangeMap(float waitTime) {
 
 string function FD_Difficulty_handler()
 {
-    if (GetConVarString("fm_fd_difficulty") == "")
+    string gamemode = GameRules_GetGameMode()
+    if ( gamemode == "fd" )
     {
-        return GameRules_GetGameMode()
+        int difficultyLevel = FD_GetDifficultyLevel()
+        switch ( difficultyLevel )
+        {
+		    case eFDDifficultyLevel.EASY:
+                return "fd_easy"
+		    case eFDDifficultyLevel.NORMAL:
+	            return "fd_normal"
+		    case eFDDifficultyLevel.HARD:
+		        return "fd_hard"
+		    case eFDDifficultyLevel.MASTER:
+                return "fd_master"
+		    case eFDDifficultyLevel.INSANE:
+                return "fd_insane"
+        }
     }
-    return GetConVarString("fm_fd_difficulty")
+    return gamemode
 }
 
 string function GetUsualNextMap() {
